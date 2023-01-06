@@ -1,0 +1,82 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gasapi", "gasapi.csproj", "{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dynamicheating", "..\vsmodtemplate-1.5.7\mods\dynamicheat\dynamicheating.csproj", "{BA28E816-C9D9-429A-A064-10BF89885C8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VintagestoryAPI", "..\vsapi\VintagestoryAPI.csproj", "{A3582245-A1D1-4135-BA90-8EFD7830DA83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSEssentialsMod", "..\vsessentialsmod\VSEssentialsMod.csproj", "{3730FF53-02AB-4CCD-80AB-6199DF67383B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VSSurvivalMod", "..\vssurvivalmod\VSSurvivalMod.csproj", "{7D22278B-7FFC-403A-92D0-FD87C7609912}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug + Flatworld|Any CPU = Debug + Flatworld|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		FastBuild|Any CPU = FastBuild|Any CPU
+		PerfTest|Any CPU = PerfTest|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Debug + Flatworld|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Debug + Flatworld|Any CPU.Build.0 = Debug|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.FastBuild|Any CPU.ActiveCfg = Release|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.FastBuild|Any CPU.Build.0 = Release|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.PerfTest|Any CPU.ActiveCfg = Release|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.PerfTest|Any CPU.Build.0 = Release|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Debug + Flatworld|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Debug + Flatworld|Any CPU.Build.0 = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.FastBuild|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.FastBuild|Any CPU.Build.0 = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.PerfTest|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.PerfTest|Any CPU.Build.0 = Debug|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA28E816-C9D9-429A-A064-10BF89885C8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Debug + Flatworld|Any CPU.ActiveCfg = Debug + Flatworld|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Debug + Flatworld|Any CPU.Build.0 = Debug + Flatworld|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.FastBuild|Any CPU.ActiveCfg = FastBuild|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.FastBuild|Any CPU.Build.0 = FastBuild|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.PerfTest|Any CPU.ActiveCfg = PerfTest|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.PerfTest|Any CPU.Build.0 = PerfTest|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3582245-A1D1-4135-BA90-8EFD7830DA83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Debug + Flatworld|Any CPU.ActiveCfg = Debug + Flatworld|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Debug + Flatworld|Any CPU.Build.0 = Debug + Flatworld|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.FastBuild|Any CPU.ActiveCfg = Debug|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.FastBuild|Any CPU.Build.0 = Debug|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.PerfTest|Any CPU.ActiveCfg = PerfTest|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.PerfTest|Any CPU.Build.0 = PerfTest|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3730FF53-02AB-4CCD-80AB-6199DF67383B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Debug + Flatworld|Any CPU.ActiveCfg = Debug + Flatworld|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Debug + Flatworld|Any CPU.Build.0 = Debug + Flatworld|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.FastBuild|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.FastBuild|Any CPU.Build.0 = Debug|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.PerfTest|Any CPU.ActiveCfg = PerfTest|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.PerfTest|Any CPU.Build.0 = PerfTest|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D22278B-7FFC-403A-92D0-FD87C7609912}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9F15AF09-6E3A-4045-A501-C8703C033A63}
+	EndGlobalSection
+EndGlobal

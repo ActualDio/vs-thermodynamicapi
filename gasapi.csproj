@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>gasapi</RootNamespace>
     <AssemblyName>gasapi</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -88,6 +88,7 @@
     <Compile Include="src\Block Behavior\BlockBehaviorGas.cs" />
     <Compile Include="src\Block\BlockGas.cs" />
     <Compile Include="src\Entity Behavior\EntityBehaviorAir.cs" />
+    <Compile Include="src\EnumGasThreadPass.cs" />
     <Compile Include="src\GasConfig.cs" />
     <Compile Include="src\System Control\ChunkGasData.cs" />
     <Compile Include="src\Entity Behavior\EntityBehaviorGas.cs" />

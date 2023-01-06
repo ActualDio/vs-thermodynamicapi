@@ -1,4 +1,6 @@
-﻿namespace GasApi
+﻿using System;
+
+namespace GasApi
 {
     public class GasConfig
     {
