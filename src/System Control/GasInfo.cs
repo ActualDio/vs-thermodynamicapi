@@ -8,13 +8,13 @@ namespace GasApi
     public class GasInfo
     {
         [JsonProperty]
-        public bool Light;
+        public float GasSpecificHeatCapacity = 1;
 
         [JsonProperty]
-        public float VentilateSpeed = 0;
+        public float GasMolarMass = 1;
 
         [JsonProperty]
-        public bool Pollutant;
+        public float GasDensity = 1;
 
         [JsonProperty]
         public bool Distribute;
@@ -43,6 +43,7 @@ namespace GasApi
         [JsonProperty]
         public float ToxicAt = 0f;
 
+        public float GasMolarVolume => GasMolarMass / GasDensity;
         public float QualityMult
         {
             get
