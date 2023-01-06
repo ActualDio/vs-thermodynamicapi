@@ -1,6 +1,5 @@
 ﻿using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Vintagestory.API;
 using Vintagestory.API.Common.Entities;
 using System.Collections.Generic;
 using Vintagestory.API.Datastructures;
@@ -8,9 +7,9 @@ using System;
 using Vintagestory.API.Config;
 using System.Linq;
 
-namespace GasApi
+namespace ThermodynamicApi.EntityBehavior
 {
-    public class EntityBehaviorAir : EntityBehavior
+    public class EntityBehaviorAir : Vintagestory.API.Common.Entities.EntityBehavior
     {
         ITreeAttribute airTree;
         GasSystem atmosphere;

@@ -18,7 +18,7 @@ using Vintagestory.ServerMods;
 using Vintagestory.Server;
 using Vintagestory.ServerMods.NoObf;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     [HarmonyPatch(typeof(EntitySidedProperties))]
     public class BreatheOverride

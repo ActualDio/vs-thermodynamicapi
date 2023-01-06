@@ -1,9 +1,9 @@
 ﻿using ProtoBuf;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
-    public class ChunkGasData
+    public class ChunkThermoData
     {
         public byte[] Data;
         public int chunkX, chunkY, chunkZ;

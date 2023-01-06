@@ -7,9 +7,9 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
-namespace GasApi
+namespace ThermodynamicApi.EntityBehavior
 {
-    public class EntityBehaviorGas : EntityBehavior
+    public class EntityBehaviorGas : Vintagestory.API.Common.Entities.EntityBehavior
     {
         float timeKeeper;
         GasSystem gasHandler;

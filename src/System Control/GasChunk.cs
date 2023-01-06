@@ -4,7 +4,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     public class GasChunk
     {
@@ -39,7 +39,7 @@ namespace GasApi
 
             Chunk.SetModdata("gases", data);
             // Todo: Send only to players that have this chunk in their loaded range
-            serverChannel.BroadcastPacket(new ChunkGasData() { chunkX = X, chunkY = Y, chunkZ = Z, Data = data });
+            serverChannel.BroadcastPacket(new ChunkThermoData() { chunkX = X, chunkY = Y, chunkZ = Z, Data = data });
         }
 
         public void TakeGas(ref Dictionary<string, float> taker, int point)

@@ -6,7 +6,7 @@ using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 using Vintagestory.API.Server;
 
-namespace GasApi.BlockEntityBehaviour
+namespace ThermodynamicApi.BlockEntityBehaviour
 {
     public class BlockEntityBehaviorPlanterAbsorbs : BlockEntityBehavior
     {

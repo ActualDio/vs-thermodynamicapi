@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     public class GasConfig
     {

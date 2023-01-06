@@ -1,9 +1,9 @@
 {
   "type": "code",
-  "modid": "gasapi",
-  "name": "Atmospheric Overhaul",
-  "authors": ["jakecool19"],
-  "description": "Adds a gas system",
+  "modid": "thermodynamicapi",
+  "name": "Thermodynamic Overhaul",
+  "authors": ["jakecool19, ActualDio"],
+  "description": "Adds thermodynamics to most blocks and entities",
   "version": "1.0.0",
   "dependencies": {
     "game": ""

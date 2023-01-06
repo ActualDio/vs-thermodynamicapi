@@ -14,7 +14,7 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     public class GasSystem : ModSystem
     {
@@ -111,8 +111,8 @@ namespace GasApi
 
             clientChannel = api.Network
                 .RegisterChannel("gases")
-                .RegisterMessageType(typeof(ChunkGasData))
-                .SetMessageHandler<ChunkGasData>(onChunkData)
+                .RegisterMessageType(typeof(ChunkThermoData))
+                .SetMessageHandler<ChunkThermoData>(onChunkData)
             ;
         }
 
@@ -129,7 +129,7 @@ namespace GasApi
 
             serverChannel = api.Network
                 .RegisterChannel("gases")
-                .RegisterMessageType(typeof(ChunkGasData))
+                .RegisterMessageType(typeof(ChunkThermoData))
             ;
 
             api.RegisterCommand("gassys", "Manipulates the gas system", "Gas System Check", (IServerPlayer player, int groupId, CmdArgs args) =>
@@ -289,7 +289,7 @@ namespace GasApi
             return new Dictionary<Vec2i, Dictionary<string, double>>();
         }
 
-        private void onChunkData(ChunkGasData msg)
+        private void onChunkData(ChunkThermoData msg)
         {
             IWorldChunk chunk = api.World.BlockAccessor.GetChunk(msg.chunkX, msg.chunkY, msg.chunkZ);
             if (chunk != null)
@@ -311,7 +311,7 @@ namespace GasApi
             chunk.SetModdata("gases", data);
 
             // Todo: Send only to players that have this chunk in their loaded range
-            serverChannel?.BroadcastPacket(new ChunkGasData() { chunkX = chunkX, chunkY = chunkY, chunkZ = chunkZ, Data = data });
+            serverChannel?.BroadcastPacket(new ChunkThermoData() { chunkX = chunkX, chunkY = chunkY, chunkZ = chunkZ, Data = data });
         }
 
         Dictionary<int, Dictionary<string, float>> getOrCreateGasesAt(BlockPos pos)

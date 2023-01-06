@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Vintagestory.API.Datastructures;
 
-namespace GasApi
+namespace ThermodynamicApi
 {
     [JsonObject(MemberSerialization.OptIn)]
     public class GasInfo
