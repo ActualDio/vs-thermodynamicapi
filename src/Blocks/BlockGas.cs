@@ -5,7 +5,7 @@ using Vintagestory.API.Common.Entities;
 using Vintagestory.GameContent;
 using System.Collections.Generic;
 
-namespace GasApi
+namespace GasApi.Blocks
 {
     public class BlockGas: Block
     {

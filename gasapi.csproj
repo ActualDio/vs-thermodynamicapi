@@ -78,15 +78,17 @@
     <Content Include="modinfo.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\Block Behavior\BlockBehaviorPlaceGas.cs" />
-    <Compile Include="src\Block Entity Behavior\BlockEntityBehaviorProduceGas.cs" />
-    <Compile Include="src\Block Entity Behavior\BlockEntityBehaviorPlanterAbsorbs.cs" />
-    <Compile Include="src\Block Entity Behavior\BlockEntityBehaviorBurningProduces.cs" />
-    <Compile Include="src\Block Behavior\BlockBehaviorExplosionGas.cs" />
-    <Compile Include="src\Block Behavior\BlockBehaviorMineGas.cs" />
-    <Compile Include="src\Block Behavior\BlockBehaviorSparkGas.cs" />
-    <Compile Include="src\Block Behavior\BlockBehaviorGas.cs" />
-    <Compile Include="src\Block\BlockGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorPlaceGas.cs" />
+    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorProduceGas.cs" />
+    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorPlanterAbsorbs.cs" />
+    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorBurningProduces.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorExplosionGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorMineGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorSparkGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorGas.cs" />
+    <Compile Include="src\Blocks\BlockGas.cs" />
+    <Compile Include="src\Blocks\BlockLiquid.cs" />
+    <Compile Include="src\Blocks\BlockSolid.cs" />
     <Compile Include="src\Entity Behavior\EntityBehaviorAir.cs" />
     <Compile Include="src\System Control\EnumGasThreadPass.cs" />
     <Compile Include="src\GasConfig.cs" />
