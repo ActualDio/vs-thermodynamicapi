@@ -7,10 +7,11 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.API.Server;
 using Vintagestory.API.Config;
+using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.ApiHelper
 {
-    public class GasHelper : ModSystem
+    public class ThermodynamicHelper : ModSystem
     {
         private ICoreAPI api;
 
@@ -25,7 +26,7 @@ namespace ThermodynamicApi.ApiHelper
 
             try
             {
-                IAsset asset = api.Assets.Get("gasapi:config/gases.json");
+                IAsset asset = api.Assets.Get("thermoapi:config/gases.json");
                 LiteGasDict = asset.ToObject<Dictionary<string, GasInfoLite>>();
                 if (LiteGasDict == null) LiteGasDict = new Dictionary<string, GasInfoLite>();
             }
@@ -38,42 +39,42 @@ namespace ThermodynamicApi.ApiHelper
         static Dictionary<string, GasInfoLite> LiteGasDict;
 
         //Returns the gases for the entire chunk; Does not create gases or chunk data
-        public Dictionary<int, Dictionary<string, float>> GetGasesForChunk(BlockPos pos)
+        public Dictionary<int, Dictionary<string, MaterialStates>> GetThermodynamicInfoForChunk(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return null;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             byte[] data;
 
             IWorldChunk chunk = api.World.BlockAccessor.GetChunkAtBlockPos(pos);
             if (chunk == null) return null;
 
-            data = chunk.GetModdata("gases");
+            data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, float>> gasesOfChunk = null;
+            Dictionary<int, Dictionary<string, MaterialStates>> thermoInfoOfChunk = null;
 
             if (data != null)
             {
                 try
                 {
-                    gasesOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, float>>>(data);
+                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialStates>>>(data);
                 }
                 catch (Exception)
                 {
-                    gasesOfChunk = null;
+                    thermoInfoOfChunk = null;
                 }
             }
 
-            return gasesOfChunk;
+            return thermoInfoOfChunk;
         }
 
         //Returns the gases for the entire chunk; Does not create gases or chunk data
         public Dictionary<int, Dictionary<string, float>> GetGasesForChunk(IWorldChunk chunk)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return null;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             byte[] data;
 
             if (chunk == null) return null;
 
-            data = chunk.GetModdata("gases");
+            data = chunk.GetModdata("thermoinfo");
 
             Dictionary<int, Dictionary<string, float>> gasesOfChunk = null;
 
@@ -95,8 +96,8 @@ namespace ThermodynamicApi.ApiHelper
         //Returns gases for a particular block position
         public Dictionary<string, float> GetGases(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return null;
-            Dictionary<int, Dictionary<string, float>> gasesOfChunk = GetGasesForChunk(pos);
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
+            Dictionary<int, Dictionary<string, float>> gasesOfChunk = GetThermodynamicInfoForChunk(pos);
             if (gasesOfChunk == null) return null;
 
             int index3d = toLocalIndex(pos);
@@ -108,7 +109,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns the amount of the specified gas at a position if it is present
         public float GetGas(BlockPos pos, string name)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return 0;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return 0;
             Dictionary<string, float> gasesHere = GetGases(pos);
 
             if (gasesHere == null || !gasesHere.ContainsKey(name)) return 0;
@@ -119,14 +120,14 @@ namespace ThermodynamicApi.ApiHelper
         //Serializes and sends a gas spread event on the bus
         public void SendGasSpread(BlockPos pos, Dictionary<string, float> gases = null)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi") || api.Side != EnumAppSide.Server) return;
+            if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return;
             (api as ICoreServerAPI)?.Event.PushEvent("spreadGas", SerializeGasTreeData(pos, gases));
         }
 
         //Serializes a gas spreading event
         public TreeAttribute SerializeGasTreeData(BlockPos pos, Dictionary<string, float> gases)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return null;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             if (pos == null) return null;
 
             TreeAttribute tree = new TreeAttribute();
@@ -142,32 +143,32 @@ namespace ThermodynamicApi.ApiHelper
                     sGases.SetFloat(gas.Key, gas.Value);
                 }
 
-                tree.SetAttribute("gases", sGases);
+                tree.SetAttribute("thermoinfo", sGases);
             }
 
             return tree;
         }
 
         //Deserializes a gas spreading event
-        public static Dictionary<string, float> DeserializeGasTreeData(IAttribute data, out BlockPos pos)
+        public static Dictionary<string, MaterialStates> DeserializeGasTreeData(IAttribute data, out BlockPos pos)
         {
             TreeAttribute tree = data as TreeAttribute;
             pos = tree?.GetBlockPos("pos");
-            ITreeAttribute gases = tree?.GetTreeAttribute("gases");
+            ITreeAttribute thermoInfo = tree?.GetTreeAttribute("thermoinfo");
 
             if (pos == null) return null;
-            Dictionary<string, float> dGases = null;
+            Dictionary<string, MaterialStates> dGases = null;
 
-            if (gases != null)
+            if (thermoInfo != null)
             {
-                dGases = new Dictionary<string, float>();
+                dGases = new Dictionary<string, MaterialStates>();
 
-                foreach (var gas in gases)
+                foreach (var gas in thermoInfo)
                 {
-                    float? value = gases.TryGetFloat(gas.Key);
+                    MaterialStates? value = SerializerUtil.Deserialize<MaterialStates>(thermoInfo.GetBytes(gas.Key));
                     if (value == null) continue;
 
-                    dGases.Add(gas.Key, (float)value);
+                    dGases.Add(gas.Key, (MaterialStates)value);
                 }
             }
 
@@ -208,7 +209,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns the air quality for this position, ranging from 1 to -1. Postive values allow breathing, negative values suffocate
         public float GetAirAmount(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return 1;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return 1;
             Dictionary<string, float> gasesHere = GetGases(pos);
 
             if (gasesHere == null) return 1;
@@ -232,7 +233,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns the aciditiy for an area between 0 and 1
         public float GetAcidity(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return 0;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return 0;
             Dictionary<string, float> gasesHere = GetGases(pos);
 
             if (gasesHere == null) return 0;
@@ -254,7 +255,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns whether there is a flammable amount of gas at this position
         public bool IsVolatile(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return false;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
             Dictionary<string, float> gasesHere = GetGases(pos);
 
             if (gasesHere == null) return false;
@@ -273,7 +274,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns whether there is enough explosive gas here to explode
         public bool ShouldExplode(BlockPos pos)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return false;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
             Dictionary<string, float> gasesHere = GetGases(pos);
 
             if (gasesHere == null) return false;
@@ -292,7 +293,7 @@ namespace ThermodynamicApi.ApiHelper
         //Determines if there is enough of the gas to be toxic
         public bool IsToxic(string name, float amount)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi")) return false;
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
             if (!LiteGasDict.ContainsKey(name)) return true;
 
             return amount > LiteGasDict[name].ToxicAt;
@@ -302,7 +303,7 @@ namespace ThermodynamicApi.ApiHelper
         //Note: Because this happens on the main thread and gas spreading happens on an off thread, it may be somewhat inaccurate
         public Dictionary<string, float> CollectGases(BlockPos pos, int radius, string[] gasFilter)
         {
-            if (!api.ModLoader.IsModEnabled("gasapi") || api.Side != EnumAppSide.Server) return null;
+            if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return null;
             
             IBlockAccessor blockAccessor = api.World.BlockAccessor;
             if (pos.Y < 1 || pos.Y > blockAccessor.MapSizeY) return null;
@@ -415,7 +416,7 @@ namespace ThermodynamicApi.ApiHelper
         //Returns the display name of the gas if it has one
         public static string GetGasDisplayName(string gas)
         {
-            string results = Lang.GetIfExists("gasapi:gas-" + gas);
+            string results = Lang.GetIfExists("thermoapi:gas-" + gas);
 
             return results == null ? gas : results;
         }
@@ -423,9 +424,10 @@ namespace ThermodynamicApi.ApiHelper
         //Returns whether the block face is solid
         public bool SolidCheck(Block block, BlockFacing face)
         {
-            if (block.Attributes?.KeyExists("gassysSolidSides") == true)
+            if (block.Attributes?.KeyExists("thermosysSolidSides") == true)
             {
-                return block.Attributes["gassysSolidSides"].IsTrue(face.Code);
+                return block.Attributes["thermosysSolidSides"].IsTrue(face.Code);
+                return block.Attributes["thermosysSolidSides"].IsTrue(face.Code);
             }
 
             return block.SideSolid[face.Index];

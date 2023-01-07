@@ -9,10 +9,10 @@ using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockEntityBehaviour
 {
-    public class BlockEntityBehaviorProduceGas : BlockEntityBehavior
+    public class BlockEntityBehaviorProduceFluid : BlockEntityBehavior
     {
-        ThermodynamicSystem gasHandler;
-        public Dictionary<string, MaterialStates> produceGas;
+        ThermodynamicSystem thermoHandler;
+        public Dictionary<string, MaterialStates> produceFluid;
         int updateTimeInMS;
         double updateTimeInHours;
         double lastTimeProduced;
@@ -25,8 +25,8 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            gasHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
-            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
+            thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            produceFluid = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
             updateTimeInMS = properties["updateMS"].AsInt(10000);
             updateTimeInHours = properties["updateHours"].AsDouble();
             Blockentity.RegisterGameTickListener(ProduceGas, updateTimeInMS);
@@ -35,11 +35,11 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public virtual void ProduceGas(float dt)
         {
             if (Blockentity.Api.World.Calendar.TotalHours - lastTimeProduced < updateTimeInHours) return;
-            if (Api.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
+            if (Api.Side != EnumAppSide.Server || produceFluid == null || produceFluid.Count < 1) return;
 
             lastTimeProduced = Blockentity.Api.World.Calendar.TotalHours;
 
-            gasHandler.QueueGasExchange(new Dictionary<string, float>(produceGas), blockPos);
+            thermoHandler.QueueGasExchange(new Dictionary<string, MaterialStates>(produceFluid), blockPos);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
@@ -56,7 +56,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
             lastTimeProduced = tree.GetDouble("gassyslastProduced");
         }
 
-        public BlockEntityBehaviorProduceGas(BlockEntity blockentity) : base(blockentity)
+        public BlockEntityBehaviorProduceFluid(BlockEntity blockentity) : base(blockentity)
         {
         }
     }

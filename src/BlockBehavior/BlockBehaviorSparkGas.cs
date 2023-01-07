@@ -2,7 +2,7 @@
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace ThermodynamicApi.BlockBehaviour
+namespace ThermodynamicApi.BlockBehavior
 {
     public class BlockBehaviorSparkGas : BlockBehaviorGas
     {

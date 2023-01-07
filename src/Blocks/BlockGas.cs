@@ -4,6 +4,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.GameContent;
 using System.Collections.Generic;
+using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.Blocks
 {
@@ -15,7 +16,7 @@ namespace ThermodynamicApi.Blocks
 
             if (world.Side != EnumAppSide.Server) return;
             
-            Dictionary<string, float> tester = new Dictionary<string, float>();
+            Dictionary<string, MaterialStates> tester = new Dictionary<string, MaterialStates>();
             tester.Add(FirstCodePart(1), 1);
 
             world.Api.ModLoader.GetModSystem<ThermodynamicSystem>().QueueGasExchange(tester, blockPos);

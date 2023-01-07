@@ -6,7 +6,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using ThermodynamicApi.ApiHelper;
-using ThermodynamicApi.BlockBehaviour;
+using ThermodynamicApi.BlockBehavior;
+using ThermodynamicApi.BlockEntityBehaviour;
 using ThermodynamicApi.Blocks;
 using ThermodynamicApi.EntityBehavior;
 using ThermodynamicApi.SystemControl;
@@ -80,7 +81,7 @@ namespace ThermodynamicApi
             api.RegisterBlockBehaviorClass("SparkGas", typeof(BlockBehaviorSparkGas));
             api.RegisterBlockBehaviorClass("MineGas", typeof(BlockBehaviorMineGas));
             api.RegisterBlockBehaviorClass("ExplosionGas", typeof(BlockBehaviorExplosionGas));
-            api.RegisterBlockBehaviorClass("PlaceGas", typeof(BlockBehaviorPlaceGas));
+            api.RegisterBlockBehaviorClass("ConsumeGas", typeof(BlockBehaviorConsumeGas));
 
             api.RegisterBlockClass("BlockGas", typeof(BlockGas));
             api.RegisterBlockClass("BlockLiquid", typeof(BlockLiquid));
@@ -89,18 +90,17 @@ namespace ThermodynamicApi
             api.RegisterEntityBehaviorClass("gasinteract", typeof(EntityBehaviorGas));
             api.RegisterEntityBehaviorClass("air", typeof(EntityBehaviorAir));
 
-            api.RegisterBlockEntityBehaviorClass("BurningProduces", typeof(BlockEntityBehaviorBurningProduces));
-            api.RegisterBlockEntityBehaviorClass("PlanterAbsorbs", typeof(BlockEntityBehaviorPlanterAbsorbs));
-            api.RegisterBlockEntityBehaviorClass("ProduceGas", typeof(BlockEntityBehaviorProduceGas));
+            api.RegisterBlockEntityBehaviorClass("ProduceFluid", typeof(BlockEntityBehaviorProduceFluid));
+            api.RegisterBlockEntityBehaviorClass("ConsumeFluid", typeof(BlockEntityBehaviorConsumeFluid));
 
-            IAsset asset = api.Assets.Get("gasapi:config/gases.json");
+            IAsset asset = api.Assets.Get("thermoapi:config/gases.json");
             FluidDictionary = asset.ToObject<Dictionary<string, FluidInfo>>();
+            SolidDictionary = asset.ToObject<Dictionary<string, SolidInfo>>();
             if (FluidDictionary == null) FluidDictionary = new Dictionary<string, FluidInfo>();
-
-            GasSpreadBlockRadius = getBlockInRadius(ThermodynamicConfig.Loaded.DefaultSpreadRadius);
+            if (SolidDictionary == null) SolidDictionary = new Dictionary<string, SolidInfo>();
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
 
-            harmony = new Harmony("com.jakecool19.gasapi.atmosphericoverhaul");
+            harmony = new Harmony("com.actualdio.thermoapi.thermodynamicapi");
             harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
 
@@ -121,7 +121,7 @@ namespace ThermodynamicApi
             }
 
             clientChannel = api.Network
-                .RegisterChannel("gases")
+                .RegisterChannel("thermodinamics")
                 .RegisterMessageType(typeof(ChunkThermoData))
                 .SetMessageHandler<ChunkThermoData>(onChunkData)
             ;
@@ -139,11 +139,11 @@ namespace ThermodynamicApi
             api.Event.RegisterEventBusListener(OnSpreadGasBus, 10000, "spreadGas");
 
             serverChannel = api.Network
-                .RegisterChannel("gases")
+                .RegisterChannel("thermodinamics")
                 .RegisterMessageType(typeof(ChunkThermoData))
             ;
 
-            api.RegisterCommand("gassys", "Manipulates the gas system", "Gas System Check", (IServerPlayer player, int groupId, CmdArgs args) =>
+            api.RegisterCommand("thermosys", "Manipulates the thermodynamics system", "Thermodynamics System Check", (IServerPlayer player, int groupId, CmdArgs args) =>
             {
                 string order = args.PopWord();
 
@@ -243,7 +243,7 @@ namespace ThermodynamicApi
 
             BlockPos spreadPos;
 
-            Dictionary<string, float> gases = GasHelper.DeserializeGasTreeData(data, out spreadPos);
+            Dictionary<string, MaterialStates> gases = ThermodynamicHelper.DeserializeGasTreeData(data, out spreadPos);
 
             if (spreadPos == null) return;
 
@@ -267,14 +267,14 @@ namespace ThermodynamicApi
             }
         }
 
-        private Dictionary<BlockPos, Dictionary<string, float>> deserializeQueue(string name)
+        private Dictionary<BlockPos, Dictionary<string, MaterialStates>> deserializeQueue(string name)
         {
             try
             {
                 byte[] data = sapi.WorldManager.SaveGame.GetData(name);
                 if (data != null)
                 {
-                    return SerializerUtil.Deserialize<Dictionary<BlockPos, Dictionary<string, float>>>(data);
+                    return SerializerUtil.Deserialize<Dictionary<BlockPos, Dictionary<string, MaterialStates>>>(data);
                 }
             }
             catch (Exception e)
@@ -306,11 +306,11 @@ namespace ThermodynamicApi
             IWorldChunk chunk = api.World.BlockAccessor.GetChunk(msg.chunkX, msg.chunkY, msg.chunkZ);
             if (chunk != null)
             {
-                chunk.SetModdata("gases", msg.Data);
+                chunk.SetModdata("thermoinfo", msg.Data);
             }
         }
 
-        void saveGases(Dictionary<int, Dictionary<string, float>> gases, BlockPos pos)
+        void saveThermodynamicData(Dictionary<int, Dictionary<string, MaterialStates>> thermoData, BlockPos pos)
         {
             int chunksize = api.World.BlockAccessor.ChunkSize;
             int chunkX = pos.X / chunksize;
@@ -320,7 +320,7 @@ namespace ThermodynamicApi
             byte[] data = SerializerUtil.Serialize(gases);
 
             IWorldChunk chunk = api.World.BlockAccessor.GetChunk(chunkX, chunkY, chunkZ);
-            chunk.SetModdata("gases", data);
+            chunk.SetModdata("thermoinfo", data);
 
             // Todo: Send only to players that have this chunk in their loaded range
             serverChannel?.BroadcastPacket(new ChunkThermoData() { chunkX = chunkX, chunkY = chunkY, chunkZ = chunkZ, Data = data });
@@ -333,7 +333,7 @@ namespace ThermodynamicApi
             IWorldChunk chunk = api.World.BlockAccessor.GetChunkAtBlockPos(pos);
             if (chunk == null) return null;
 
-            data = chunk.GetModdata("gases");
+            data = chunk.GetModdata("thermoinfo");
 
             Dictionary<int, Dictionary<string, float>> gasesOfChunk = null;
 
@@ -360,7 +360,7 @@ namespace ThermodynamicApi
         {
             byte[] data;
 
-            data = chunk.GetModdata("gases");
+            data = chunk.GetModdata("thermoinfo");
 
             Dictionary<int, Dictionary<string, float>> gasesOfChunk = null;
 
@@ -573,7 +573,7 @@ namespace ThermodynamicApi
 
             Dictionary<string, float> dest = ExplosionQueue[pos];
 
-            GasHelper.MergeGasDicts(gases, ref dest);
+            ThermodynamicHelper.MergeGasDicts(gases, ref dest);
 
             ExplosionQueue[pos] = dest;
         }
@@ -604,7 +604,7 @@ namespace ThermodynamicApi
             if (PollutionPerChunk[columm][gas] < 0) PollutionPerChunk[columm][gas] = 0;
         }
 
-        public void QueueGasExchange(Dictionary<string, float> adds, BlockPos pos, float scrub = 0, bool ignoreLiquids = false, bool ignoreSide = false)
+        public void QueueGasExchange(Dictionary<string, MaterialStates> adds, BlockPos pos, float scrub = 0, bool ignoreLiquids = false, bool ignoreSide = false)
         {
             if (adds == null) adds = new Dictionary<string, float>();
 
@@ -881,7 +881,7 @@ namespace ThermodynamicApi
                     {
                         if (FluidDictionary.ContainsKey(gas.Key) && (FluidDictionary[gas.Key].FlammableAmount <= 1 || FluidDictionary[gas.Key].ExplosionAmount <= 1))
                         {
-                            if (FluidDictionary[gas.Key].BurnInto != null) GasHelper.MergeGasIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
+                            if (FluidDictionary[gas.Key].BurnInto != null) ThermodynamicHelper.MergeGasIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
 
                             modifier.Remove(gas.Key);
                         }
@@ -1023,9 +1023,9 @@ namespace ThermodynamicApi
 
             public bool SolidCheck(Block block, BlockFacing face)
             {
-                if (block.Attributes?.KeyExists("gassysSolidSides") == true)
+                if (block.Attributes?.KeyExists("thermosysSolidSides") == true)
                 {
-                    return block.Attributes["gassysSolidSides"].IsTrue(face.Code);
+                    return block.Attributes["thermosysSolidSides"].IsTrue(face.Code);
                 }
 
                 return block.SideSolid[face.Index];

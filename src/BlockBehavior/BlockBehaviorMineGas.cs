@@ -4,7 +4,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 
-namespace ThermodynamicApi.BlockBehaviour
+namespace ThermodynamicApi.BlockBehavior
 {
     public class BlockBehaviorMineGas : BlockBehaviorGas
     {

@@ -1,6 +1,6 @@
 {
   "type": "code",
-  "modid": "thermodynamicapi",
+  "modid": "thermoapi",
   "name": "Thermodynamic Overhaul",
   "authors": ["jakecool19, ActualDio"],
   "description": "Adds thermodynamics to most blocks and entities",

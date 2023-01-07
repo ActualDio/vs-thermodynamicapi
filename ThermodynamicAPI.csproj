@@ -96,14 +96,12 @@
     <Content Include="modinfo.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="src\BlockBehavior\BlockBehaviorPlaceGas.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviourAbsorbsGas.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviourProducesGas.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviourLiquid.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviourSolid.cs" />
-    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorAbsorbsFluid.cs" />
-    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorProduceGas.cs" />
-    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorAbsorbsGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorProduceGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorConsumeGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorLiquid.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorSolid.cs" />
+    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorConsumeFluid.cs" />
+    <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorProduceFluid.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorExplosionGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorMineGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorSparkGas.cs" />
@@ -117,7 +115,7 @@
     <Compile Include="src\SystemControl\ChunkThermoData.cs" />
     <Compile Include="src\EntityBehavior\EntityBehaviorGas.cs" />
     <Compile Include="src\SystemControl\MaterialsChunk.cs" />
-    <Compile Include="src\For Other Mods\GasHelper.cs" />
+    <Compile Include="src\For Other Mods\ThermodynamicHelper.cs" />
     <Compile Include="src\ThermoDynamics\FluidInfo.cs" />
     <Compile Include="src\ThermodynamicSystem.cs" />
     <Compile Include="src\GUI\HudElementAirBar.cs" />

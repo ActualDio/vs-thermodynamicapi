@@ -39,12 +39,12 @@ namespace ThermodynamicApi.SystemControl
             
             byte[] data = SerializerUtil.Serialize(Materials);
 
-            Chunk.SetModdata("gases", data);
+            Chunk.SetModdata("thermoinfo", data);
             // Todo: Send only to players that have this chunk in their loaded range
             serverChannel.BroadcastPacket(new ChunkThermoData() { chunkX = X, chunkY = Y, chunkZ = Z, Data = data });
         }
 
-        public void TakeGas(ref Dictionary<string, float> taker, int point)
+        public void TakeGas(ref Dictionary<string, MaterialStates> taker, int point)
         {
             if (Materials == null || !Materials.ContainsKey(point)) return;
             

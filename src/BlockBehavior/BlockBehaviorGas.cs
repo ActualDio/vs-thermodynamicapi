@@ -4,9 +4,9 @@ using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 
-namespace ThermodynamicApi.BlockBehaviour
+namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorGas : BlockBehavior
+    public class BlockBehaviorGas : Vintagestory.API.Common.BlockBehavior
     {
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
         {

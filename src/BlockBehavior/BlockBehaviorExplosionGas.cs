@@ -3,17 +3,18 @@ using Vintagestory.API;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
+using ThermodynamicApi.ThermoDynamics;
 
-namespace ThermodynamicApi.BlockBehaviour
+namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorExplosionGas : BlockBehavior
+    public class BlockBehaviorExplosionGas : BlockBehaviorGas
     {
-        public Dictionary<string, float> produceGas;
+        public Dictionary<string, MaterialStates> produceGas;
 
         public override void Initialize(JsonObject properties)
         {
             base.Initialize(properties);
-            produceGas = properties["produceGas"].AsObject(new Dictionary<string, float>());
+            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
         }
 
         public override void OnBlockExploded(IWorldAccessor world, BlockPos pos, BlockPos explosionCenter, EnumBlastType blastType, ref EnumHandling handling)

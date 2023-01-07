@@ -9,10 +9,10 @@ using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockEntityBehaviour
 {
-    public class BlockEntityBehaviorAbsorbsGas : BlockEntityBehavior
+    public class BlockEntityBehaviorConsumeFluid : BlockEntityBehavior
     {
-        ThermodynamicSystem fluidHandler;
-        public Dictionary<string, MaterialStates> gasScrub;
+        ThermodynamicSystem thermoHandler;
+        public Dictionary<string, MaterialStates> liquidScrub;
         public MaterialStates scrubAmount;
         BlockPos blockPos
         {
@@ -22,11 +22,11 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            fluidHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
             Blockentity.RegisterGameTickListener(RemoveFluid, 5000);
             scrubAmount = properties["scrubAmount"].AsObject<MaterialStates>();
-            gasScrub = new Dictionary<string, MaterialStates>();
-            gasScrub.Add("THISISAPLANT", scrubAmount);
+            liquidScrub = new Dictionary<string, MaterialStates>();
+            liquidScrub.Add("THISISAPLANT", scrubAmount);
         }
 
         public void RemoveFluid(float dt)
@@ -38,10 +38,10 @@ namespace ThermodynamicApi.BlockEntityBehaviour
 
             if (bpc.Inventory[0].Empty || bpc.Inventory[0].Itemstack.Block?.BlockMaterial != EnumBlockMaterial.Plant || bpc.Inventory[0].Itemstack.Collectible.Code.Path.StartsWith("mushroom")) return;
 
-            fluidHandler.QueueGasExchange(removeInstructions, blockPos);
+            thermoHandler.QueueGasExchange(new Dictionary<string, MaterialStates>(liquidScrub), blockPos);
         }
 
-        public BlockEntityBehaviorAbsorbsGas(BlockEntity blockentity) : base(blockentity)
+        public BlockEntityBehaviorConsumeFluid(BlockEntity blockentity) : base(blockentity)
         {
         }
     }
