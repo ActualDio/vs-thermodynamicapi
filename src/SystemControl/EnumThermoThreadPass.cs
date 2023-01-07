@@ -1,10 +1,10 @@
 ﻿
-namespace ThermodynamicApi
+namespace ThermodynamicApi.SystemControl
 {
     public enum EnumThermoThreadPass
     {
         TEMPERATURE,
-        GAS,
+        FLUID,
         GRAVITY
     }
 }

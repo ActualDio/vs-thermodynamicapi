@@ -35,17 +35,17 @@
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Users\jakec\AppData\Roaming\Vintagestory\Lib\0Harmony.dll</HintPath>
+      <HintPath>..\..\Rimworld Modding\Harmony.2.2.2.0\net472\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>packages\protobuf-net.Core.3.1.26\lib\net462\protobuf-net.Core.dll</HintPath>
+    <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>packages\protobuf-net.3.1.26\lib\net462\protobuf-net.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
     </Reference>
-    <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Collections.Immutable.1.7.1\lib\net461\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Collections.Immutable.7.0.0\lib\net462\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -55,8 +55,8 @@
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -70,7 +70,10 @@
     </Reference>
     <Reference Include="VintagestoryLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Users\jakec\AppData\Roaming\Vintagestory\VintagestoryLib.dll</HintPath>
+      <HintPath>..\..\..\..\AppData\Roaming\Vintagestory\VintagestoryLib.dll</HintPath>
+    </Reference>
+    <Reference Include="VSBuildLib">
+      <HintPath>..\..\..\..\AppData\Roaming\Vintagestory\VSBuildLib.dll</HintPath>
     </Reference>
     <Reference Include="VSSurvivalMod">
       <HintPath>$(AppData)\Vintagestory\Mods\VSSurvivalMod.dll</HintPath>
@@ -105,16 +108,18 @@
     <Compile Include="src\Blocks\BlockLiquid.cs" />
     <Compile Include="src\Blocks\BlockSolid.cs" />
     <Compile Include="src\EntityBehavior\EntityBehaviorAir.cs" />
-    <Compile Include="src\System Control\EnumGasThreadPass.cs" />
+    <Compile Include="src\SystemControl\EnumThermoThreadPass.cs" />
     <Compile Include="src\GasConfig.cs" />
-    <Compile Include="src\System Control\ChunkThermoData.cs" />
+    <Compile Include="src\SystemControl\ChunkThermoData.cs" />
     <Compile Include="src\EntityBehavior\EntityBehaviorGas.cs" />
-    <Compile Include="src\System Control\GasChunk.cs" />
+    <Compile Include="src\SystemControl\MaterialsChunk.cs" />
     <Compile Include="src\For Other Mods\GasHelper.cs" />
-    <Compile Include="src\System Control\GasInfo.cs" />
+    <Compile Include="src\SystemControl\FluidInfo.cs" />
     <Compile Include="src\GasSystem.cs" />
     <Compile Include="src\GUI\HudElementAirBar.cs" />
-    <Compile Include="src\System Control\Patches.cs" />
+    <Compile Include="src\SystemControl\Patches.cs" />
+    <Compile Include="src\SystemControl\SolidInfo.cs" />
+    <Compile Include="src\SystemControl\ThermodynMath.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="assets\" />

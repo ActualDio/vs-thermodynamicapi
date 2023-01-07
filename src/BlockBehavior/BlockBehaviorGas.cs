@@ -12,7 +12,7 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             if (!GasConfig.Loaded.GasesDebugEnabled) return null;
             StringBuilder dsc = new StringBuilder();
-            dsc.AppendLine("Gases at Position:");
+            dsc.AppendLine("Materials at Position:");
             GasSystem gasworks = world.Api.ModLoader.GetModSystem<GasSystem>();
             if (gasworks == null) return null;
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using gasapi.src.SystemControl;
+using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -6,10 +7,10 @@ using Vintagestory.API.Util;
 
 namespace ThermodynamicApi
 {
-    public class GasChunk
+    public class MaterialsChunk
     {
         public IWorldChunk Chunk;
-        public Dictionary<int, Dictionary<string, float>> Gases;
+        public Dictionary<int, Dictionary<string, MaterialStates>> Materials;
 
         public int X;
         public int Y;
@@ -17,10 +18,10 @@ namespace ThermodynamicApi
 
         bool shouldSave;
 
-        public GasChunk(IWorldChunk newChunk, Dictionary<int, Dictionary<string, float>> newGases, int x, int y, int z)
+        public MaterialsChunk(IWorldChunk newChunk, Dictionary<int, Dictionary<string, MaterialStates>> newMaterials, int x, int y, int z)
         {
             Chunk = newChunk;
-            Gases = newGases;
+            Materials = newMaterials;
             X = x;
             Y = y;
             Z = z;
@@ -35,7 +36,7 @@ namespace ThermodynamicApi
         {
             if (!shouldSave) return;
             
-            byte[] data = SerializerUtil.Serialize(Gases);
+            byte[] data = SerializerUtil.Serialize(Materials);
 
             Chunk.SetModdata("gases", data);
             // Todo: Send only to players that have this chunk in their loaded range
@@ -44,9 +45,9 @@ namespace ThermodynamicApi
 
         public void TakeGas(ref Dictionary<string, float> taker, int point)
         {
-            if (Gases == null || !Gases.ContainsKey(point)) return;
+            if (Materials == null || !Materials.ContainsKey(point)) return;
             
-            Dictionary<string, float> takeFrom = Gases[point];
+            Dictionary<string, float> takeFrom = Materials[point];
             if (takeFrom == null || takeFrom.Count < 1) return;
 
             foreach (var gas in takeFrom)
@@ -58,21 +59,21 @@ namespace ThermodynamicApi
                 else taker[gas.Key] = gas.Value;
             }
 
-            Gases[point] = null;
+            Materials[point] = null;
             shouldSave = true;
             
         }
 
         public void SetGas(string gasName, float amount, int point)
         {
-            if (Gases == null) return;
+            if (Materials == null) return;
             
             Dictionary<string, float> gasAtPoint;
-            Gases.TryGetValue(point, out gasAtPoint);
+            Materials.TryGetValue(point, out gasAtPoint);
             if (gasAtPoint == null) gasAtPoint = new Dictionary<string, float>();
 
             if (!gasAtPoint.ContainsKey(gasName)) gasAtPoint.Add(gasName, GameMath.Clamp(amount, 0, 1)); else gasAtPoint[gasName] = GameMath.Clamp(gasAtPoint[gasName] + amount, 0, 1);
-            if (Gases.ContainsKey(point)) Gases[point] = gasAtPoint; else Gases.Add(point, gasAtPoint);
+            if (Materials.ContainsKey(point)) Materials[point] = gasAtPoint; else Materials.Add(point, gasAtPoint);
             
             shouldSave = true;
             

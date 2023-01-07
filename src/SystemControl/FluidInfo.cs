@@ -5,16 +5,13 @@ using Vintagestory.API.Datastructures;
 namespace ThermodynamicApi
 {
     [JsonObject(MemberSerialization.OptIn)]
-    public class GasInfo
+    public class FluidInfo
     {
         [JsonProperty]
-        public float GasSpecificHeatCapacity = 1;
+        public float FluidSpecificHeatCapacity = 1;
 
         [JsonProperty]
-        public float GasMolarMass = 1;
-
-        [JsonProperty]
-        public float GasDensity = 1;
+        public float FluidMolarMass = 1;
 
         [JsonProperty]
         public bool Distribute;
@@ -43,7 +40,6 @@ namespace ThermodynamicApi
         [JsonProperty]
         public float ToxicAt = 0f;
 
-        public float GasMolarVolume => GasMolarMass / GasDensity;
         public float QualityMult
         {
             get

@@ -31,7 +31,7 @@ namespace ThermodynamicApi
         IClientNetworkChannel clientChannel;
         static IServerNetworkChannel serverChannel;
 
-        public static Dictionary<string, GasInfo> GasDictionary;
+        public static Dictionary<string, FluidInfo> GasDictionary;
 
         private GasSpreadingThread gasSpreader;
 
@@ -83,8 +83,8 @@ namespace ThermodynamicApi
             api.RegisterBlockEntityBehaviorClass("ProduceGas", typeof(BlockEntityBehaviorProduceGas));
 
             IAsset asset = api.Assets.Get("gasapi:config/gases.json");
-            GasDictionary = asset.ToObject<Dictionary<string, GasInfo>>();
-            if (GasDictionary == null) GasDictionary = new Dictionary<string, GasInfo>();
+            GasDictionary = asset.ToObject<Dictionary<string, FluidInfo>>();
+            if (GasDictionary == null) GasDictionary = new Dictionary<string, FluidInfo>();
 
             GasSpreadBlockRadius = getBlockInRadius(GasConfig.Loaded.DefaultSpreadRadius);
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
@@ -737,7 +737,7 @@ namespace ThermodynamicApi
                 if (collectedGases.ContainsKey("RADIUS")) { radius = (int)collectedGases["RADIUS"]; collectedGases.Remove("RADIUS"); }
                 if (radius < 1) radius = 0;
                 Queue<Vec3i> checkQueue = new Queue<Vec3i>();
-                List<GasChunk> chunks = new List<GasChunk>();
+                List<MaterialsChunk> chunks = new List<MaterialsChunk>();
                 Cuboidi bounds = new Cuboidi(pos.X - radius, pos.Y - radius, pos.Z - radius, pos.X + radius, pos.Y + radius, pos.Z + radius);
                 HashSet<BlockPos>[] layers = new HashSet<BlockPos>[bounds.MaxY - bounds.MinY];
                 Dictionary<int, Block> blocks = new Dictionary<int, Block>();
@@ -761,7 +761,7 @@ namespace ThermodynamicApi
 
                             if (chunk != null)
                             {
-                                chunks.Add(new GasChunk(chunk, getOrCreateGasesAt(chunk), x, y, z));
+                                chunks.Add(new MaterialsChunk(chunk, getOrCreateGasesAt(chunk), x, y, z));
                             }
                         }
                     }
@@ -773,9 +773,9 @@ namespace ThermodynamicApi
                 Block starter = blockAccessor.GetBlock(pos);
                 blocks.Add(starter.BlockId, starter);
 
-                GasChunk originChunk = null;
+                MaterialsChunk originChunk = null;
 
-                foreach (GasChunk chunk in chunks)
+                foreach (MaterialsChunk chunk in chunks)
                 {
                     if (chunk.Compare(pos, chunksize))
                     {
@@ -797,9 +797,9 @@ namespace ThermodynamicApi
                     Vec3i bpos = checkQueue.Dequeue();
 
                     Block parent = null;
-                    GasChunk parentChunk = null;
+                    MaterialsChunk parentChunk = null;
 
-                    foreach (GasChunk chunk in chunks)
+                    foreach (MaterialsChunk chunk in chunks)
                     {
                         if (chunk.Compare(bpos.AsBlockPos, chunksize))
                         {
@@ -821,11 +821,11 @@ namespace ThermodynamicApi
                         if (!bounds.Contains(curPos) || layers[curPos.Y - bounds.MinY].Contains(curPos)) continue;
                         if (curPos.Y < 0 || curPos.Y > blockAccessor.MapSizeY) continue;
 
-                        GasChunk localArea = null;
+                        MaterialsChunk localArea = null;
                         int chunkBid = toLocalIndex(curPos);
                         Block atPos = null;
 
-                        foreach (GasChunk chunk in chunks)
+                        foreach (MaterialsChunk chunk in chunks)
                         {
                             if (chunk.Compare(curPos, blockAccessor.ChunkSize))
                             {
@@ -918,13 +918,13 @@ namespace ThermodynamicApi
                         float giveaway = Math.Min(gas.Value / totalBlockCount, 1);
                         for (int i = layers.Length - 1; i > 0; i--)
                         {
-                            GasChunk localArea = null;
+                            MaterialsChunk localArea = null;
 
                             foreach (BlockPos pil in layers[i])
                             {
                                 if (localArea == null || !localArea.Compare(pil, blockAccessor.ChunkSize))
                                 {
-                                    foreach (GasChunk chunk in chunks)
+                                    foreach (MaterialsChunk chunk in chunks)
                                     {
                                         if (chunk.Compare(pil, blockAccessor.ChunkSize))
                                         {
@@ -946,13 +946,13 @@ namespace ThermodynamicApi
                             float giveaway = 1;
                             if (modifier[gas.Key] < layers[i].Count) giveaway = modifier[gas.Key] / layers[i].Count; else giveaway = 1;
 
-                            GasChunk localArea = null;
+                            MaterialsChunk localArea = null;
 
                             foreach (BlockPos pil in layers[i])
                             {
                                 if (localArea == null || !localArea.Compare(pil, blockAccessor.ChunkSize))
                                 {
-                                    foreach (GasChunk chunk in chunks)
+                                    foreach (MaterialsChunk chunk in chunks)
                                     {
                                         if (chunk.Compare(pil, blockAccessor.ChunkSize))
                                         {
@@ -978,13 +978,13 @@ namespace ThermodynamicApi
                             float giveaway = 1;
                             if (modifier[gas.Key] < layers[i].Count) giveaway = modifier[gas.Key] / layers[i].Count; else giveaway = 1;
 
-                            GasChunk localArea = null;
+                            MaterialsChunk localArea = null;
 
                             foreach (BlockPos pil in layers[i])
                             {
                                 if (localArea == null || !localArea.Compare(pil, blockAccessor.ChunkSize))
                                 {
-                                    foreach (GasChunk chunk in chunks)
+                                    foreach (MaterialsChunk chunk in chunks)
                                     {
                                         if (chunk.Compare(pil, blockAccessor.ChunkSize))
                                         {
@@ -1004,7 +1004,7 @@ namespace ThermodynamicApi
                 }
 
                 //Save Time!!!
-                foreach (GasChunk chunk in chunks)
+                foreach (MaterialsChunk chunk in chunks)
                 {
                     chunk.SaveChunk(serverChannel);
                 }
