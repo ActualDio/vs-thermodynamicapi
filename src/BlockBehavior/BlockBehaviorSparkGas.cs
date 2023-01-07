@@ -4,15 +4,15 @@ using Vintagestory.API.Server;
 
 namespace ThermodynamicApi.BlockBehaviour
 {
-    public class BlockBehaviorSparkGas : BlockBehavior
+    public class BlockBehaviorSparkGas : BlockBehaviorGas
     {
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
         {
             base.OnBlockBroken(world, pos, byPlayer, ref handling);
             
-            if (world.Side != EnumAppSide.Server || byPlayer == null || !GasConfig.Loaded.GasesEnabled || !GasConfig.Loaded.Explosions || world.Rand.NextDouble() > GasConfig.Loaded.PickaxeExplosionChance) return;
+            if (world.Side != EnumAppSide.Server || byPlayer == null || !ThermodynamicConfig.Loaded.GasesEnabled || !ThermodynamicConfig.Loaded.Explosions || world.Rand.NextDouble() > ThermodynamicConfig.Loaded.PickaxeExplosionChance) return;
 
-            GasSystem gasHandler = world.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
             if (gasHandler.ShouldExplode(pos))
             {

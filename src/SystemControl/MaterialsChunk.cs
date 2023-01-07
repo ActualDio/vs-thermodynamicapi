@@ -1,11 +1,12 @@
-﻿using gasapi.src.SystemControl;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using ThermodynamicApi.ThermoDynamics;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 
-namespace ThermodynamicApi
+
+namespace ThermodynamicApi.SystemControl
 {
     public class MaterialsChunk
     {
@@ -47,7 +48,7 @@ namespace ThermodynamicApi
         {
             if (Materials == null || !Materials.ContainsKey(point)) return;
             
-            Dictionary<string, float> takeFrom = Materials[point];
+            Dictionary<string, MaterialStates> takeFrom = Materials[point];
             if (takeFrom == null || takeFrom.Count < 1) return;
 
             foreach (var gas in takeFrom)

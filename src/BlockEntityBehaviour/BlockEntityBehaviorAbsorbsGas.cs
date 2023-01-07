@@ -5,14 +5,15 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 using Vintagestory.API.Server;
+using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockEntityBehaviour
 {
-    public class BlockEntityBehaviorPlanterAbsorbs : BlockEntityBehavior
+    public class BlockEntityBehaviorAbsorbsGas : BlockEntityBehavior
     {
-        GasSystem gasHandler;
-        public Dictionary<string, float> gasScrub;
-        public float scrubAmount = 1;
+        ThermodynamicSystem fluidHandler;
+        public Dictionary<string, MaterialStates> gasScrub;
+        public MaterialStates scrubAmount;
         BlockPos blockPos
         {
             get { return Blockentity.Pos; }
@@ -21,26 +22,26 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            gasHandler = api.ModLoader.GetModSystem<GasSystem>();
-            Blockentity.RegisterGameTickListener(RemoveCO2, 5000);
-            scrubAmount = properties["scrubAmount"].AsFloat(1);
-            gasScrub = new Dictionary<string, float>();
+            fluidHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            Blockentity.RegisterGameTickListener(RemoveFluid, 5000);
+            scrubAmount = properties["scrubAmount"].AsObject<MaterialStates>();
+            gasScrub = new Dictionary<string, MaterialStates>();
             gasScrub.Add("THISISAPLANT", scrubAmount);
         }
 
-        public void RemoveCO2(float dt)
+        public void RemoveFluid(float dt)
         {
             if (Api.Side != EnumAppSide.Server) return;
 
-            BlockEntityPlantContainer bpc = Blockentity as BlockEntityPlantContainer;
+            BlockEntity bpc;
             if (bpc == null || Api.World.BlockAccessor.GetLightLevel(Blockentity.Pos, EnumLightLevelType.TimeOfDaySunLight) < 13) return;
 
             if (bpc.Inventory[0].Empty || bpc.Inventory[0].Itemstack.Block?.BlockMaterial != EnumBlockMaterial.Plant || bpc.Inventory[0].Itemstack.Collectible.Code.Path.StartsWith("mushroom")) return;
 
-            gasHandler.QueueGasExchange(new Dictionary<string, float>(gasScrub), blockPos);
+            fluidHandler.QueueGasExchange(removeInstructions, blockPos);
         }
 
-        public BlockEntityBehaviorPlanterAbsorbs(BlockEntity blockentity) : base(blockentity)
+        public BlockEntityBehaviorAbsorbsGas(BlockEntity blockentity) : base(blockentity)
         {
         }
     }

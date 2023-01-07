@@ -12,7 +12,7 @@ namespace ThermodynamicApi.EntityBehavior
     public class EntityBehaviorGas : Vintagestory.API.Common.Entities.EntityBehavior
     {
         float timeKeeper;
-        GasSystem gasHandler;
+        ThermodynamicSystem gasHandler;
 
         ItemStack LeftHand
         {
@@ -33,7 +33,7 @@ namespace ThermodynamicApi.EntityBehavior
         {
             base.Initialize(properties, attributes);
 
-            gasHandler = entity.Api.ModLoader.GetModSystem<GasSystem>();
+            gasHandler = entity.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
         }
 
         public override void OnGameTick(float deltaTime)
@@ -48,7 +48,7 @@ namespace ThermodynamicApi.EntityBehavior
 
             BlockPos entityPos = entity.SidedPos.AsBlockPos;
 
-            if (GasConfig.Loaded.Explosions && (entity.IsOnFire || HasFire()))
+            if (ThermodynamicConfig.Loaded.Explosions && (entity.IsOnFire || HasFire()))
             {
                 if (gasHandler.ShouldExplode(entityPos))
                 {
@@ -57,7 +57,7 @@ namespace ThermodynamicApi.EntityBehavior
                 else if (gasHandler.IsVolatile(entityPos)) entity.Ignite();
             }
 
-            if (GasConfig.Loaded.Acid && entity.FeetInLiquid)
+            if (ThermodynamicConfig.Loaded.Acid && entity.FeetInLiquid)
             {
                 float acidAmount = gasHandler.GetAcidity(entity.ServerPos.AsBlockPos);
                 EntityPlayer player;
@@ -78,9 +78,9 @@ namespace ThermodynamicApi.EntityBehavior
 
         public override void OnEntityDeath(DamageSource damageSourceForDeath)
         {
-            if (GasConfig.Loaded.Smoke && damageSourceForDeath?.Type == EnumDamageType.Fire)
+            if (ThermodynamicConfig.Loaded.Smoke && damageSourceForDeath?.Type == EnumDamageType.Fire)
             {
-                GasSystem gasHandler = entity.Api.ModLoader.GetModSystem<GasSystem>();
+                ThermodynamicSystem gasHandler = entity.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
                 Dictionary<string, float> gases = new Dictionary<string, float>();
                 gases.Add("co2", 0.05f * gasHandler.GasSpreadBlockRadius);

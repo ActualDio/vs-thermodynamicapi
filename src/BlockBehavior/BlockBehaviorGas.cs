@@ -10,10 +10,10 @@ namespace ThermodynamicApi.BlockBehaviour
     {
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
         {
-            if (!GasConfig.Loaded.GasesDebugEnabled) return null;
+            if (!ThermodynamicConfig.Loaded.GasesDebugEnabled) return null;
             StringBuilder dsc = new StringBuilder();
             dsc.AppendLine("Materials at Position:");
-            GasSystem gasworks = world.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasworks = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
             if (gasworks == null) return null;
 
             Dictionary<string, float> gasesHere = gasworks.GetGases(pos);
@@ -33,9 +33,9 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             base.OnBlockRemoved(world, pos, ref handling);
 
-            if (world.Side != EnumAppSide.Server || block.GetBehavior<BlockBehaviorMineGas>() != null || world.Rand.NextDouble() > GasConfig.Loaded.SpreadGasOnBreakChance) return;
+            if (world.Side != EnumAppSide.Server || block.GetBehavior<BlockBehaviorMineGas>() != null || world.Rand.NextDouble() > ThermodynamicConfig.Loaded.SpreadGasOnBreakChance) return;
 
-            GasSystem gasHandler = world.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
             gasHandler.QueueGasExchange(null, pos);
         }
@@ -44,9 +44,9 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             base.OnBlockPlaced(world, blockPos, ref handling);
 
-            if (world.Side != EnumAppSide.Server || world.Rand.NextDouble() > GasConfig.Loaded.SpreadGasOnPlaceChance) return;
+            if (world.Side != EnumAppSide.Server || world.Rand.NextDouble() > ThermodynamicConfig.Loaded.SpreadGasOnPlaceChance) return;
 
-            GasSystem gasHandler = world.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
             gasHandler.QueueGasExchange(null, blockPos);
         }
@@ -55,9 +55,9 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             base.OnNeighbourBlockChange(world, pos, neibpos, ref handling);
 
-            if (world.Side == EnumAppSide.Server && world.Rand.NextDouble() <= GasConfig.Loaded.UpdateSpreadGasChance)
+            if (world.Side == EnumAppSide.Server && world.Rand.NextDouble() <= ThermodynamicConfig.Loaded.UpdateSpreadGasChance)
             {
-                world.Api.ModLoader.GetModSystem<GasSystem>()?.QueueGasExchange(null, pos);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, pos);
             }
         }
 

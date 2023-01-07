@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ThermodynamicApi.BlockBehaviour
 {
-    public class BlockBehaviorPlaceGas : BlockBehavior
+    public class BlockBehaviorPlaceGas : BlockBehaviorGas
     {
         public Dictionary<string, float> produceGas;
 
@@ -20,9 +20,9 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             base.OnBlockPlaced(world, blockPos, ref handling);
 
-            if (!GasConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
+            if (!ThermodynamicConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
 
-            world.Api.ModLoader.GetModSystem<GasSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), blockPos);
+            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), blockPos);
         }
 
         public BlockBehaviorPlaceGas(Block block) : base(block)

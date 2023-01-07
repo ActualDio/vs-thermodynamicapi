@@ -42,9 +42,9 @@ namespace ThermodynamicApi
         [HarmonyPostfix]
         static void ChangeToAir(Entity entity, EntityProperties properties, EntitySidedProperties __instance, JsonObject[] ___BehaviorsAsJsonObj)
         {
-            if (GasConfig.Loaded.BreathingEnabled)
+            if (ThermodynamicConfig.Loaded.BreathingEnabled)
             {
-                if (!(entity is EntityPlayer) || GasConfig.Loaded.PlayerBreathingEnabled)
+                if (!(entity is EntityPlayer) || ThermodynamicConfig.Loaded.PlayerBreathingEnabled)
                 {
                     for (int i = 0; i < __instance.Behaviors.Count; i++)
                     {
@@ -60,7 +60,7 @@ namespace ThermodynamicApi
                 }
             }
 
-            if (GasConfig.Loaded.GasesEnabled && entity.Api.Side == EnumAppSide.Server)
+            if (ThermodynamicConfig.Loaded.GasesEnabled && entity.Api.Side == EnumAppSide.Server)
             {
                 EntityBehavior gas = new EntityBehaviorGas(entity);
                 gas.Initialize(properties, null);
@@ -93,7 +93,7 @@ namespace ThermodynamicApi
         static void GasSetup(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, ServerMain __instance)
         {
             //Register this explosion
-            GasSystem gasHandler = __instance.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
             if (gasHandler == null) return;
 
@@ -104,7 +104,7 @@ namespace ThermodynamicApi
         [HarmonyPostfix]
         static void GasSpread(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, ServerMain __instance)
         {
-            GasSystem gasHandler = __instance.Api.ModLoader.GetModSystem<GasSystem>();
+            ThermodynamicSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
             if (gasHandler == null) return;
 
@@ -127,14 +127,14 @@ namespace ThermodynamicApi
                 }
             }
 
-            return GasConfig.Loaded.ContainerBonus;
+            return ThermodynamicConfig.Loaded.ContainerBonus;
         }
 
         [HarmonyPatch("GetPerishRate")]
         [HarmonyPostfix]
         static void AirQuality(BlockEntityContainer __instance, ref float __result)
         {
-            float airQuality = __instance.Api.ModLoader.GetModSystem<GasSystem>().GetAirAmount(__instance.Pos);
+            float airQuality = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>().GetAirAmount(__instance.Pos);
 
             if (airQuality >= 0) return;
 
@@ -166,7 +166,7 @@ namespace ThermodynamicApi
         {
             if (__result && world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<GasSystem>()?.QueueGasExchange(null, blockSel.Position);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, blockSel.Position);
             }
         }
     }
@@ -195,7 +195,7 @@ namespace ThermodynamicApi
         {
             if (world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<GasSystem>()?.QueueGasExchange(null, position);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, position);
             }
         }
     }
@@ -240,7 +240,7 @@ namespace ThermodynamicApi
         static void Burn(Entity __instance, DamageSource damageSource)
         {
             if (damageSource?.Source != EnumDamageSource.Explosion) return;
-            if (GasConfig.Loaded.FlammableGas && __instance.Api.ModLoader.GetModSystem<GasSystem>().IsVolatile(__instance.ServerPos.AsBlockPos))
+            if (ThermodynamicConfig.Loaded.FlammableGas && __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>().IsVolatile(__instance.ServerPos.AsBlockPos))
             {
                 __instance.Ignite();
             }

@@ -2,9 +2,9 @@
 
 namespace ThermodynamicApi
 {
-    public class GasConfig
+    public class ThermodynamicConfig
     {
-        public static GasConfig Loaded { get; set; } = new GasConfig();
+        public static ThermodynamicConfig Loaded { get; set; } = new ThermodynamicConfig();
 
         //Gas settings
 

@@ -18,7 +18,7 @@ namespace ThermodynamicApi.Blocks
             Dictionary<string, float> tester = new Dictionary<string, float>();
             tester.Add(FirstCodePart(1), 1);
 
-            world.Api.ModLoader.GetModSystem<GasSystem>().QueueGasExchange(tester, blockPos);
+            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>().QueueGasExchange(tester, blockPos);
             world.BlockAccessor.SetBlock(0, blockPos);
         }
 
@@ -27,7 +27,7 @@ namespace ThermodynamicApi.Blocks
             Dictionary<string, float> tester = new Dictionary<string, float>();
             tester.Add(FirstCodePart(1), 1);
 
-            api.ModLoader.GetModSystem<GasSystem>().SetGases(pos, tester);
+            api.ModLoader.GetModSystem<ThermodynamicSystem>().SetGases(pos, tester);
             blockAccessor.SetBlock(0, pos);
 
             return true;

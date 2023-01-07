@@ -20,9 +20,9 @@ namespace ThermodynamicApi.BlockBehaviour
         {
             base.OnBlockExploded(world, pos, explosionCenter, blastType, ref handling);
             
-            if (!GasConfig.Loaded.GasesEnabled || produceGas == null || produceGas.Count < 1) return;
+            if (!ThermodynamicConfig.Loaded.GasesEnabled || produceGas == null || produceGas.Count < 1) return;
             
-            world.Api.ModLoader.GetModSystem<GasSystem>()?.AddToExplosion(explosionCenter, produceGas);
+            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.AddToExplosion(explosionCenter, produceGas);
         }
 
 

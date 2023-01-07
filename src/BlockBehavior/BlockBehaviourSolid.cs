@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace gasapi.src.SystemControl
+namespace ThermodynamicApi.BlockBehaviour
 {
-    internal class SolidInfo
+    public class BlockBehaviourSolid
     {
     }
 }

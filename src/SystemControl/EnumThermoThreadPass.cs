@@ -1,10 +1,12 @@
 ﻿
 namespace ThermodynamicApi.SystemControl
 {
-    public enum EnumThermoThreadPass
+    public enum EnumThermoProcessOrder
     {
-        TEMPERATURE,
-        FLUID,
-        GRAVITY
+        MATTER_TRANSFER,
+        HEAT_FROM_MATTER_TRANSFER,
+        HEAT_FROM_IO,
+        HEAT_FROM_CONDUCTION_RADIATION,
+        PRESSURE
     }
 }

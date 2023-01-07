@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using Vintagestory.API.Datastructures;
 
-namespace ThermodynamicApi
+namespace ThermodynamicApi.ThermoDynamics
+
 {
     [JsonObject(MemberSerialization.OptIn)]
     public class FluidInfo
@@ -12,6 +13,9 @@ namespace ThermodynamicApi
 
         [JsonProperty]
         public float FluidMolarMass = 1;
+
+        [JsonProperty]
+        public float StateChangeTemp = 0;
 
         [JsonProperty]
         public bool Distribute;

@@ -5,6 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using ThermodynamicApi.ApiHelper;
+using ThermodynamicApi.BlockBehaviour;
+using ThermodynamicApi.Blocks;
+using ThermodynamicApi.EntityBehavior;
+using ThermodynamicApi.SystemControl;
+using ThermodynamicApi.ThermoDynamics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -16,14 +22,17 @@ using Vintagestory.GameContent;
 
 namespace ThermodynamicApi
 {
-    public class GasSystem : ModSystem
+    public class ThermodynamicSystem : ModSystem
     {
         private ICoreServerAPI sapi;
-        private Dictionary<BlockPos, Dictionary<string, float>> spreadGasQueue = new Dictionary<BlockPos, Dictionary<string, float>>();
-        public static object spreadGasLock = new object();
-        private Dictionary<BlockPos, Dictionary<string, float>> ExplosionQueue = new Dictionary<BlockPos, Dictionary<string, float>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialStates>> matterDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialStates>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialStates>> heatDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialStates>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialStates>> pressureDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialStates>>();
+        public static object matterDynamicsLock = new object();
+        public static object heatDynamicsLock = new object();
+        public static object pressureDynamicsLock = new object();
+        private Dictionary<BlockPos, Dictionary<string, MaterialStates>> ExplosionQueue = new Dictionary<BlockPos, Dictionary<string, MaterialStates>>();
         private Dictionary<Vec2i, Dictionary<string, double>> PollutionPerChunk = new Dictionary<Vec2i, Dictionary<string, double>>();
-        public int GasSpreadBlockRadius;
         EntityPartitioning entityUtil;
 
         ICoreAPI api;
@@ -31,10 +40,10 @@ namespace ThermodynamicApi
         IClientNetworkChannel clientChannel;
         static IServerNetworkChannel serverChannel;
 
-        public static Dictionary<string, FluidInfo> GasDictionary;
+        public static Dictionary<string, FluidInfo> FluidDictionary;
+        public static Dictionary<string, SolidInfo> SolidDictionary;
 
-        private GasSpreadingThread gasSpreader;
-
+        private ThermodynamicThread thermoThread;
         private Harmony harmony;
 
         public override bool ShouldLoad(EnumAppSide forSide)
@@ -48,19 +57,19 @@ namespace ThermodynamicApi
 
             try
             {
-                GasConfig FromDisk;
-                if ((FromDisk = api.LoadModConfig<GasConfig>("GasConfig.json")) == null)
+                ThermodynamicConfig FromDisk;
+                if ((FromDisk = api.LoadModConfig<ThermodynamicConfig>("ThermodynamicConfig.json")) == null)
                 {
-                    api.StoreModConfig<GasConfig>(GasConfig.Loaded, "GasConfig.json");
+                    api.StoreModConfig<ThermodynamicConfig>(ThermodynamicConfig.Loaded, "ThermodynamicConfig.json");
                 }
-                else GasConfig.Loaded = FromDisk;
+                else ThermodynamicConfig.Loaded = FromDisk;
             }
             catch
             {
-                api.StoreModConfig<GasConfig>(GasConfig.Loaded, "GasConfig.json");
+                api.StoreModConfig<ThermodynamicConfig>(ThermodynamicConfig.Loaded, "ThermodynamicConfig.json");
             }
 
-            api.World.Config.SetBool("GAgasesEnabled", GasConfig.Loaded.GasesEnabled);
+            api.World.Config.SetBool("GAgasesEnabled", ThermodynamicConfig.Loaded.GasesEnabled);
         }
 
         public override void Start(ICoreAPI api)
@@ -74,6 +83,8 @@ namespace ThermodynamicApi
             api.RegisterBlockBehaviorClass("PlaceGas", typeof(BlockBehaviorPlaceGas));
 
             api.RegisterBlockClass("BlockGas", typeof(BlockGas));
+            api.RegisterBlockClass("BlockLiquid", typeof(BlockLiquid));
+            api.RegisterBlockClass("BlockSolid", typeof(BlockGas));
 
             api.RegisterEntityBehaviorClass("gasinteract", typeof(EntityBehaviorGas));
             api.RegisterEntityBehaviorClass("air", typeof(EntityBehaviorAir));
@@ -83,10 +94,10 @@ namespace ThermodynamicApi
             api.RegisterBlockEntityBehaviorClass("ProduceGas", typeof(BlockEntityBehaviorProduceGas));
 
             IAsset asset = api.Assets.Get("gasapi:config/gases.json");
-            GasDictionary = asset.ToObject<Dictionary<string, FluidInfo>>();
-            if (GasDictionary == null) GasDictionary = new Dictionary<string, FluidInfo>();
+            FluidDictionary = asset.ToObject<Dictionary<string, FluidInfo>>();
+            if (FluidDictionary == null) FluidDictionary = new Dictionary<string, FluidInfo>();
 
-            GasSpreadBlockRadius = getBlockInRadius(GasConfig.Loaded.DefaultSpreadRadius);
+            GasSpreadBlockRadius = getBlockInRadius(ThermodynamicConfig.Loaded.DefaultSpreadRadius);
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
 
             harmony = new Harmony("com.jakecool19.gasapi.atmosphericoverhaul");
@@ -103,7 +114,7 @@ namespace ThermodynamicApi
         {
             base.StartClientSide(api);
 
-            if (GasConfig.Loaded.PlayerBreathingEnabled)
+            if (ThermodynamicConfig.Loaded.PlayerBreathingEnabled)
             {
                 HudElementAirBar airBar = new HudElementAirBar(api);
                 airBar.TryOpen();
@@ -136,13 +147,13 @@ namespace ThermodynamicApi
             {
                 string order = args.PopWord();
 
-                switch(order)
+                switch (order)
                 {
                     case "queue":
                         player.SendMessage(GlobalConstants.GeneralChatGroup, "Current Queue Count: " + spreadGasQueue.Count, EnumChatType.CommandSuccess);
                         break;
                     case "reset":
-                        lock (spreadGasLock)
+                        lock (spreadFluidLock)
                         {
                             Dictionary<BlockPos, Dictionary<string, float>> backup = new Dictionary<BlockPos, Dictionary<string, float>>();
 
@@ -155,7 +166,7 @@ namespace ThermodynamicApi
                         }
                         break;
                     case "find":
-                        lock (spreadGasLock)
+                        lock (spreadFluidLock)
                         {
                             int count = 1;
                             foreach (var pos in spreadGasQueue)
@@ -166,14 +177,14 @@ namespace ThermodynamicApi
                         }
                         break;
                     case "stop":
-                        gasSpreader.Stopping = true;
+                        fluidSpreader.Stopping = true;
                         break;
                     case "start":
-                        gasSpreader.Stopping = false;
-                        gasSpreader.Start(spreadGasQueue);
+                        fluidSpreader.Stopping = false;
+                        fluidSpreader.Start(spreadGasQueue);
                         break;
                     case "cleanstart":
-                        lock (spreadGasLock)
+                        lock (spreadFluidLock)
                         {
                             Dictionary<BlockPos, Dictionary<string, float>> backup = new Dictionary<BlockPos, Dictionary<string, float>>();
 
@@ -184,11 +195,11 @@ namespace ThermodynamicApi
 
                             spreadGasQueue = backup;
                         }
-                        gasSpreader.Stopping = false;
-                        gasSpreader.Start(spreadGasQueue);
+                        fluidSpreader.Stopping = false;
+                        fluidSpreader.Start(spreadGasQueue);
                         break;
                     case "toggle":
-                        gasSpreader.Paused = !gasSpreader.Paused;
+                        fluidSpreader.Paused = !fluidSpreader.Paused;
                         break;
                     case "pollution":
                         Vec2i cpos = new Vec2i(player.Entity.ServerPos.AsBlockPos.X / 32, player.Entity.ServerPos.AsBlockPos.Z / 32);
@@ -204,11 +215,12 @@ namespace ThermodynamicApi
 
             }, Privilege.time);
 
-            api.World.RegisterGameTickListener((dt) => { 
-            
-                if (gasSpreader?.Stopping == true)
+            api.World.RegisterGameTickListener((dt) =>
+            {
+
+                if (fluidSpreader?.Stopping == true)
                 {
-                    lock (spreadGasLock)
+                    lock (spreadFluidLock)
                     {
                         Dictionary<BlockPos, Dictionary<string, float>> backup = new Dictionary<BlockPos, Dictionary<string, float>>();
 
@@ -219,8 +231,8 @@ namespace ThermodynamicApi
 
                         spreadGasQueue = backup;
                     }
-                    gasSpreader.Stopping = false;
-                    gasSpreader.Start(spreadGasQueue);
+                    fluidSpreader.Stopping = false;
+                    fluidSpreader.Start(spreadGasQueue);
                 }
             }, 30);
         }
@@ -228,10 +240,10 @@ namespace ThermodynamicApi
         private void OnSpreadGasBus(string eventName, ref EnumHandling handling, IAttribute data)
         {
             if (eventName != "spreadGas" || data == null) return;
-            
+
             BlockPos spreadPos;
 
-            Dictionary<string, float> gases =  GasHelper.DeserializeGasTreeData(data, out spreadPos);
+            Dictionary<string, float> gases = GasHelper.DeserializeGasTreeData(data, out spreadPos);
 
             if (spreadPos == null) return;
 
@@ -242,13 +254,13 @@ namespace ThermodynamicApi
         {
             spreadGasQueue = deserializeQueue("spreadGasQueue");
             PollutionPerChunk = deserializePollution("pollutionChunks");
-            gasSpreader = new GasSpreadingThread(sapi, this);
-            gasSpreader.Start(spreadGasQueue);
+            fluidSpreader = new ThermodynamicThread(sapi, this);
+            fluidSpreader.Start(spreadGasQueue);
         }
 
         private void onGameGettingSaved()
         {
-            lock (spreadGasLock)
+            lock (spreadFluidLock)
             {
                 sapi.WorldManager.SaveGame.StoreData("spreadGasQueue", SerializerUtil.Serialize(spreadGasQueue));
                 sapi.WorldManager.SaveGame.StoreData("pollutionChunks", SerializerUtil.Serialize(PollutionPerChunk));
@@ -373,7 +385,7 @@ namespace ThermodynamicApi
 
         private void addGasBehavior()
         {
-            if (!GasConfig.Loaded.GasesEnabled) return;
+            if (!ThermodynamicConfig.Loaded.GasesEnabled) return;
             foreach (Block block in api.World.Blocks)
             {
                 if (block.BlockId != 0)
@@ -454,15 +466,15 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (FluidDictionary.ContainsKey(gas.Key))
                 {
-                    if (GasDictionary[gas.Key] != null) conc += gas.Value * GasDictionary[gas.Key].QualityMult; else conc += gas.Value;
+                    if (FluidDictionary[gas.Key] != null) conc += gas.Value * FluidDictionary[gas.Key].QualityMult; else conc += gas.Value;
                 }
             }
 
             if (conc >= 2) return -1;
             if (conc < 0) return 1;
-            return 1- conc;
+            return 1 - conc;
         }
 
         public float GetAcidity(BlockPos pos)
@@ -475,9 +487,9 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (FluidDictionary.ContainsKey(gas.Key))
                 {
-                    if (GasDictionary[gas.Key] != null && GasDictionary[gas.Key].Acidic) conc += gas.Value;
+                    if (FluidDictionary[gas.Key] != null && FluidDictionary[gas.Key].Acidic) conc += gas.Value;
                     if (conc >= 1) return 1;
                 }
             }
@@ -493,9 +505,9 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (FluidDictionary.ContainsKey(gas.Key))
                 {
-                    if (GasDictionary[gas.Key].FlammableAmount > 0 && gas.Value >= GasDictionary[gas.Key].FlammableAmount) return true;
+                    if (FluidDictionary[gas.Key].FlammableAmount > 0 && gas.Value >= FluidDictionary[gas.Key].FlammableAmount) return true;
                 }
             }
 
@@ -510,9 +522,9 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (FluidDictionary.ContainsKey(gas.Key))
                 {
-                    if (GasDictionary[gas.Key].ExplosionAmount <= gas.Value) return true;
+                    if (FluidDictionary[gas.Key].ExplosionAmount <= gas.Value) return true;
                 }
             }
 
@@ -521,9 +533,9 @@ namespace ThermodynamicApi
 
         public bool IsToxic(string name, float amount)
         {
-            if (!GasDictionary.ContainsKey(name)) return true;
+            if (!FluidDictionary.ContainsKey(name)) return true;
 
-            return amount > GasDictionary[name].ToxicAt;
+            return amount > FluidDictionary[name].ToxicAt;
         }
 
         public void SetupExplosion(BlockPos pos, int radius)
@@ -550,7 +562,7 @@ namespace ThermodynamicApi
             if (pos == null) return;
 
             if (!ExplosionQueue.ContainsKey(pos)) return;
-            
+
             QueueGasExchange(ExplosionQueue[pos], pos);
             ExplosionQueue.Remove(pos);
         }
@@ -602,7 +614,7 @@ namespace ThermodynamicApi
 
             BlockPos temp = pos.Copy();
 
-            lock (spreadGasLock)
+            lock (spreadFluidLock)
             {
                 if (!spreadGasQueue.ContainsKey(temp)) spreadGasQueue.Add(temp, adds);
                 else
@@ -658,19 +670,18 @@ namespace ThermodynamicApi
 
             return counter.Count;
         }
-
-        class GasSpreadingThread
+        class ThermodynamicThread
         {
             int gasSpreadTick = 10;
             IBlockAccessor blockAccessor;
             ICoreServerAPI sapi;
             Dictionary<BlockPos, Dictionary<string, float>> checkSpread;
-            GasSystem gasSys;
+            ThermodynamicSystem gasSys;
 
             public bool Stopping { get; set; }
             public bool Paused { get; set; }
 
-            public GasSpreadingThread(ICoreServerAPI sapi, GasSystem gassys)
+            public ThermodynamicThread(ICoreServerAPI sapi, ThermodynamicSystem gassys)
             {
                 this.sapi = sapi;
                 this.gasSys = gassys;
@@ -684,7 +695,7 @@ namespace ThermodynamicApi
                 {
                     while (!sapi.Server.IsShuttingDown && !Stopping)
                     {
-                        if (!Paused && GasConfig.Loaded.GasesEnabled)
+                        if (!Paused && ThermodynamicConfig.Loaded.GasesEnabled)
                         {
                             blockAccessor = sapi.World.BlockAccessor;
                             for (int i = 0; i < 100; i++)
@@ -694,7 +705,7 @@ namespace ThermodynamicApi
                                 BlockPos current = null;
                                 Dictionary<string, float> gases = null;
 
-                                lock (spreadGasLock)
+                                lock (spreadFluidLock)
                                 {
                                     try
                                     {
@@ -733,7 +744,7 @@ namespace ThermodynamicApi
                 collectedGases.Remove("THISISAPLANT");
                 collectedGases.Remove("IGNORELIQUIDS");
                 collectedGases.Remove("IGNORESOLIDCHECK");
-                int radius = GasConfig.Loaded.DefaultSpreadRadius;
+                int radius = ThermodynamicConfig.Loaded.DefaultSpreadRadius;
                 if (collectedGases.ContainsKey("RADIUS")) { radius = (int)collectedGases["RADIUS"]; collectedGases.Remove("RADIUS"); }
                 if (radius < 1) radius = 0;
                 Queue<Vec3i> checkQueue = new Queue<Vec3i>();
@@ -853,7 +864,7 @@ namespace ThermodynamicApi
                             windspeed = GetWindspeed(blockAccessor.GetWindSpeedAt(curPos.ToVec3d()), windspeed);
                         }
 
-                        if (IsPlant(atPos)) plantNear ++;
+                        if (IsPlant(atPos)) plantNear++;
                         layers[curPos.Y - bounds.MinY].Add(curPos.Copy());
                         checkQueue.Enqueue(curPos.ToVec3i());
                         totalBlockCount++;
@@ -868,9 +879,9 @@ namespace ThermodynamicApi
                 {
                     foreach (var gas in collectedGases)
                     {
-                        if (GasDictionary.ContainsKey(gas.Key) && (GasDictionary[gas.Key].FlammableAmount <= 1 || GasDictionary[gas.Key].ExplosionAmount <= 1))
+                        if (FluidDictionary.ContainsKey(gas.Key) && (FluidDictionary[gas.Key].FlammableAmount <= 1 || FluidDictionary[gas.Key].ExplosionAmount <= 1))
                         {
-                            if (GasDictionary[gas.Key].BurnInto != null) GasHelper.MergeGasIntoDict(GasDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
+                            if (FluidDictionary[gas.Key].BurnInto != null) GasHelper.MergeGasIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
 
                             modifier.Remove(gas.Key);
                         }
@@ -878,7 +889,7 @@ namespace ThermodynamicApi
 
                     collectedGases = new Dictionary<string, float>(modifier);
                 }
-                
+
                 //Spread gases
                 foreach (var gas in collectedGases)
                 {
@@ -889,14 +900,14 @@ namespace ThermodynamicApi
                     bool acid = false;
                     bool pollutant = false;
 
-                    if (GasDictionary.ContainsKey(gas.Key) && GasDictionary[gas.Key] != null)
+                    if (FluidDictionary.ContainsKey(gas.Key) && FluidDictionary[gas.Key] != null)
                     {
-                        light = GasDictionary[gas.Key].Light;
-                        plant = GasDictionary[gas.Key].PlantAbsorb;
-                        distribute = GasDictionary[gas.Key].Distribute;
-                        wind = GasDictionary[gas.Key].VentilateSpeed;
-                        acid = GasDictionary[gas.Key].Acidic;
-                        pollutant = GasDictionary[gas.Key].Pollutant;
+                        light = FluidDictionary[gas.Key].Light;
+                        plant = FluidDictionary[gas.Key].PlantAbsorb;
+                        distribute = FluidDictionary[gas.Key].Distribute;
+                        wind = FluidDictionary[gas.Key].VentilateSpeed;
+                        acid = FluidDictionary[gas.Key].Acidic;
+                        pollutant = FluidDictionary[gas.Key].Pollutant;
                     }
 
                     if (plant && plantNear > 0)

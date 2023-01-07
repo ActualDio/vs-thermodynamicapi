@@ -5,13 +5,14 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 using Vintagestory.API.Server;
+using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockEntityBehaviour
 {
     public class BlockEntityBehaviorProduceGas : BlockEntityBehavior
     {
-        GasSystem gasHandler;
-        public Dictionary<string, float> produceGas;
+        ThermodynamicSystem gasHandler;
+        public Dictionary<string, MaterialStates> produceGas;
         int updateTimeInMS;
         double updateTimeInHours;
         double lastTimeProduced;
@@ -24,8 +25,8 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            gasHandler = api.ModLoader.GetModSystem<GasSystem>();
-            produceGas = properties["produceGas"].AsObject(new Dictionary<string, float>());
+            gasHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
             updateTimeInMS = properties["updateMS"].AsInt(10000);
             updateTimeInHours = properties["updateHours"].AsDouble();
             Blockentity.RegisterGameTickListener(ProduceGas, updateTimeInMS);
