@@ -12,7 +12,7 @@ namespace ThermodynamicApi.ThermoDynamics
         public float SpecificHeatCapacity = 1;
 
         [JsonProperty]
-        public float FluidMolarMass = 1;
+        public float MolarMass = 1;
 
         [JsonProperty]
         public float StateChangeTemp = 0;

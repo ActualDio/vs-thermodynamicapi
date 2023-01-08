@@ -198,11 +198,11 @@ namespace ThermodynamicApi.EntityBehavior
 
         private void RemoveEffect(string name)
         {
-            if (ThermodynamicSystem.FluidDictionary != null && ThermodynamicSystem.FluidDictionary.ContainsKey(name))
+            if (ThermodynamicSystem.GasDictionary != null && ThermodynamicSystem.GasDictionary.ContainsKey(name))
             {
-                if (ThermodynamicSystem.FluidDictionary[name].Effects != null && ThermodynamicSystem.FluidDictionary[name].Effects.Count > 0)
+                if (ThermodynamicSystem.GasDictionary[name].Effects != null && ThermodynamicSystem.GasDictionary[name].Effects.Count > 0)
                 {
-                    foreach (var effect in ThermodynamicSystem.FluidDictionary[name].Effects)
+                    foreach (var effect in ThermodynamicSystem.GasDictionary[name].Effects)
                     {
                         entity.Stats.Remove(effect.Key, "gaseffect-" + name);
                     }
@@ -212,11 +212,11 @@ namespace ThermodynamicApi.EntityBehavior
 
         private void SetEffect(string name, float conc)
         {
-            if (ThermodynamicSystem.FluidDictionary != null && ThermodynamicSystem.FluidDictionary.ContainsKey(name))
+            if (ThermodynamicSystem.GasDictionary != null && ThermodynamicSystem.GasDictionary.ContainsKey(name))
             {
-                if (ThermodynamicSystem.FluidDictionary[name].Effects != null && ThermodynamicSystem.FluidDictionary[name].Effects.Count > 0)
+                if (ThermodynamicSystem.GasDictionary[name].Effects != null && ThermodynamicSystem.GasDictionary[name].Effects.Count > 0)
                 {
-                    foreach (var effect in ThermodynamicSystem.FluidDictionary[name].Effects)
+                    foreach (var effect in ThermodynamicSystem.GasDictionary[name].Effects)
                     {
                         //System.Diagnostics.Debug.WriteLine(effect.Value * conc);
                         entity.Stats.Set(effect.Key, "gaseffect-" + name, effect.Value * conc, true);

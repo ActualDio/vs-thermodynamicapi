@@ -41,7 +41,8 @@ namespace ThermodynamicApi
         IClientNetworkChannel clientChannel;
         static IServerNetworkChannel serverChannel;
 
-        public static Dictionary<string, MatterInfo> FluidDictionary;
+        public static Dictionary<string, MatterInfo> GasDictionary;
+        public static Dictionary<string, MatterInfo> LiquidDictionary;
         public static Dictionary<string, MatterInfo> SolidDictionary;
 
         private ThermodynamicThread thermoThread;
@@ -94,9 +95,9 @@ namespace ThermodynamicApi
             api.RegisterBlockEntityBehaviorClass("ConsumeFluid", typeof(BlockEntityBehaviorConsumeFluid));
 
             IAsset asset = api.Assets.Get("thermoapi:config/gases.json");
-            FluidDictionary = asset.ToObject<Dictionary<string, MatterInfo>>();
+            GasDictionary = asset.ToObject<Dictionary<string, MatterInfo>>();
             SolidDictionary = asset.ToObject<Dictionary<string, MatterInfo>>();
-            if (FluidDictionary == null) FluidDictionary = new Dictionary<string, MatterInfo>();
+            if (GasDictionary == null) GasDictionary = new Dictionary<string, MatterInfo>();
             if (SolidDictionary == null) SolidDictionary = new Dictionary<string, MatterInfo>();
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
 
@@ -207,7 +208,7 @@ namespace ThermodynamicApi
 
                         info.AppendLine(String.Format("Pollution in Chunk Column at positon X: {0}, Z: {1}", cpos.X, cpos.Y));
                         if (PollutionPerChunk != null && PollutionPerChunk.ContainsKey(cpos))
-                            foreach (var gas in PollutionPerChunk[cpos]) info.AppendLine(Lang.Get("gasapi:gas-" + gas.Key) + ": " + gas.Value.ToString("#.#"));
+                            foreach (var matter in PollutionPerChunk[cpos]) info.AppendLine(Lang.Get("gasapi:matter-" + matter.Key) + ": " + matter.Value.ToString("#.#"));
 
                         player.SendMessage(GlobalConstants.GeneralChatGroup, info.ToString(), EnumChatType.CommandSuccess);
                         break;
@@ -455,28 +456,23 @@ namespace ThermodynamicApi
             SaveThermodynamicData(matterOfChunk, pos);
         }
 
-        public MatterProperties GetGasProperties(BlockPos pos)
+        public float GetTotalGasMass(BlockPos pos)
         {
-            Dictionary<string, MatterProperties> gasesHere = GetMatter(pos);
+            Dictionary<string, MatterProperties> matterHere = GetMatter(pos);
+            if (matterHere == null) return default;
+            float mass = 0;
 
-            if (gasesHere == null) return 1;
-
-            float conc = 0;
-
-            foreach (var gas in gasesHere)
+            foreach (var matter in matterHere)
             {
-                if (FluidDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(matter.Key) && matter.Value != default && matter.Value.MolarDensity.HasValue)
                 {
-                    if (FluidDictionary[gas.Key] != null) conc += gas.Value * FluidDictionary[gas.Key].QualityMult; else conc += gas.Value;
+                    if (GasDictionary[matter.Key] != null) mass += matter.Value.MolarDensity.Value * GasDictionary[matter.Key].MolarMass;
                 }
             }
-
-            if (conc >= 2) return -1;
-            if (conc < 0) return 1;
-            return 1 - conc;
+            return mass;
         }
 
-        public float GetAcidity(BlockPos pos)
+        /*public float GetAcidity(BlockPos pos)
         {
             Dictionary<string, float> gasesHere = GetMatter(pos);
 
@@ -486,17 +482,17 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (FluidDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(gas.Key))
                 {
-                    if (FluidDictionary[gas.Key] != null && FluidDictionary[gas.Key].Acidic) conc += gas.Value;
+                    if (GasDictionary[gas.Key] != null && GasDictionary[gas.Key].Acidic) conc += gas.Value;
                     if (conc >= 1) return 1;
                 }
             }
 
             return conc;
-        }
+        }*/
 
-        public bool IsVolatile(BlockPos pos)
+        /*public bool IsVolatile(BlockPos pos)
         {
             Dictionary<string, float> gasesHere = GetMatter(pos);
 
@@ -504,16 +500,16 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (FluidDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(gas.Key))
                 {
-                    if (FluidDictionary[gas.Key].FlammableAmount > 0 && gas.Value >= FluidDictionary[gas.Key].FlammableAmount) return true;
+                    if (GasDictionary[gas.Key].FlammableAmount > 0 && gas.Value >= GasDictionary[gas.Key].FlammableAmount) return true;
                 }
             }
 
             return false;
-        }
+        }*/
 
-        public bool ShouldExplode(BlockPos pos)
+        /*public bool ShouldExplode(BlockPos pos)
         {
             Dictionary<string, float> gasesHere = GetMatter(pos);
 
@@ -521,23 +517,23 @@ namespace ThermodynamicApi
 
             foreach (var gas in gasesHere)
             {
-                if (FluidDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(gas.Key))
                 {
-                    if (FluidDictionary[gas.Key].ExplosionAmount <= gas.Value) return true;
+                    if (GasDictionary[gas.Key].ExplosionAmount <= gas.Value) return true;
                 }
             }
 
             return false;
-        }
+        }*/
 
-        public bool IsToxic(string name, float amount)
+        /*public bool IsToxic(string name, float amount)
         {
-            if (!FluidDictionary.ContainsKey(name)) return true;
+            if (!GasDictionary.ContainsKey(name)) return true;
 
-            return amount > FluidDictionary[name].ToxicAt;
-        }
+            return amount > GasDictionary[name].ToxicAt;
+        }*/
 
-        public void SetupExplosion(BlockPos pos, int radius)
+        /*public void SetupExplosion(BlockPos pos, int radius)
         {
             if (pos == null || radius < 0) return;
 
@@ -554,9 +550,9 @@ namespace ThermodynamicApi
             {
                 ExplosionQueue[pos]["RADIUS"] = radius;
             }
-        }
+        }*/
 
-        public void EnqueueExplosion(BlockPos pos)
+        /*public void EnqueueExplosion(BlockPos pos)
         {
             if (pos == null) return;
 
@@ -564,9 +560,9 @@ namespace ThermodynamicApi
 
             QueueMatterChange(ExplosionQueue[pos], pos);
             ExplosionQueue.Remove(pos);
-        }
+        }*/
 
-        public void AddToExplosion(BlockPos pos, Dictionary<string, float> gases)
+        /*public void AddToExplosion(BlockPos pos, Dictionary<string, float> gases)
         {
             if (pos == null || !ExplosionQueue.ContainsKey(pos)) return;
 
@@ -575,9 +571,9 @@ namespace ThermodynamicApi
             ThermodynamicHelper.MergeGasDicts(gases, ref dest);
 
             ExplosionQueue[pos] = dest;
-        }
+        }*/
 
-        public void AddPollution(BlockPos pos, string gas, float value)
+        /*public void AddPollution(BlockPos pos, string gas, float value)
         {
             if (pos == null || gas == null || value == 0) return;
 
@@ -601,24 +597,20 @@ namespace ThermodynamicApi
             }
 
             if (PollutionPerChunk[columm][gas] < 0) PollutionPerChunk[columm][gas] = 0;
-        }
+        }*/
 
-        public void QueueMatterChange(Dictionary<string, MatterProperties> adds, BlockPos pos, float scrub = 0, bool ignoreLiquids = false, bool ignoreSide = false)
+        public void QueueMatterChange(Dictionary<string, MatterProperties> change, BlockPos pos)
         {
-            if (adds == null) adds = new Dictionary<string, MatterProperties>();
-
-            if (scrub > 0) adds.Add("THISISAPLANT", 0);
-            if (ignoreLiquids) adds.Add("IGNORELIQUIDS", 0);
-            if (ignoreSide) adds.Add("IGNORESOLIDCHECK", 0);
+            if (change == null) change = new Dictionary<string, MatterProperties>();
 
             BlockPos temp = pos.Copy();
 
-            lock (spreadFluidLock)
+            lock (matterDynamicsLock)
             {
-                if (!spreadGasQueue.ContainsKey(temp)) spreadGasQueue.Add(temp, adds);
+                if (!matterDynamicsQueue.ContainsKey(temp)) matterDynamicsQueue.Add(temp, change);
                 else
                 {
-                    foreach (var gas in adds)
+                    foreach (var gas in change)
                     {
                         if (!spreadGasQueue[temp].ContainsKey(gas.Key)) spreadGasQueue[temp].Add(gas.Key, gas.Value);
                         else spreadGasQueue[temp][gas.Key] += gas.Value;
@@ -878,9 +870,9 @@ namespace ThermodynamicApi
                 {
                     foreach (var gas in collectedGases)
                     {
-                        if (FluidDictionary.ContainsKey(gas.Key) && (FluidDictionary[gas.Key].FlammableAmount <= 1 || FluidDictionary[gas.Key].ExplosionAmount <= 1))
+                        if (GasDictionary.ContainsKey(gas.Key) && (GasDictionary[gas.Key].FlammableAmount <= 1 || GasDictionary[gas.Key].ExplosionAmount <= 1))
                         {
-                            if (FluidDictionary[gas.Key].BurnInto != null) ThermodynamicHelper.MergeFluidIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
+                            if (GasDictionary[gas.Key].BurnInto != null) ThermodynamicHelper.MergeFluidIntoDict(GasDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
 
                             modifier.Remove(gas.Key);
                         }
@@ -899,14 +891,14 @@ namespace ThermodynamicApi
                     bool acid = false;
                     bool pollutant = false;
 
-                    if (FluidDictionary.ContainsKey(gas.Key) && FluidDictionary[gas.Key] != null)
+                    if (GasDictionary.ContainsKey(gas.Key) && GasDictionary[gas.Key] != null)
                     {
-                        light = FluidDictionary[gas.Key].Light;
-                        plant = FluidDictionary[gas.Key].PlantAbsorb;
-                        distribute = FluidDictionary[gas.Key].Distribute;
-                        wind = FluidDictionary[gas.Key].VentilateSpeed;
-                        acid = FluidDictionary[gas.Key].Acidic;
-                        pollutant = FluidDictionary[gas.Key].Pollutant;
+                        light = GasDictionary[gas.Key].Light;
+                        plant = GasDictionary[gas.Key].PlantAbsorb;
+                        distribute = GasDictionary[gas.Key].Distribute;
+                        wind = GasDictionary[gas.Key].VentilateSpeed;
+                        acid = GasDictionary[gas.Key].Acidic;
+                        pollutant = GasDictionary[gas.Key].Pollutant;
                     }
 
                     if (plant && plantNear > 0)

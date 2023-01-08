@@ -21,7 +21,10 @@ namespace ThermodynamicApi.ThermoDynamics
         public float? Pressure { get; set; } // in Pascals
         public float? Temperature { get; set; } // in Kelvin
         public EnumMatterState? State { get; set; } //Solid, Liquid and Gas
-        public MatterProperties(float? density = null, float? press = null, float? temp = null, EnumMatterState? state = null)
+        public MatterProperties(float? density = null,
+                                float? press = null,
+                                float? temp = null,
+                                EnumMatterState? state = null)
         {
             MolarDensity = density;
             Pressure = press;
