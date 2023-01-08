@@ -36,6 +36,13 @@ namespace ThermodynamicApi.ThermoDynamics
         {
             return !(a == b);
         }
+        public static MaterialStates operator +(MaterialStates a, MaterialStates b)
+        {
+            if (a == default) return b;
+            if (b == default) return a;
+            a.Pressure =+ b.Pressure; a.Temperature =+ b.Temperature; a.MolarDensity = +b.MolarDensity;
+            return a;
+        }
         public override bool Equals(object obj)
         {
             return this == (MaterialStates)obj;

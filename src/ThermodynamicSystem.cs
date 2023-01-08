@@ -143,7 +143,7 @@ namespace ThermodynamicApi
                 .RegisterMessageType(typeof(ChunkThermoData))
             ;
 
-            api.RegisterCommand("thermosys", "Manipulates the thermodynamics system", "Thermodynamics System Check", (IServerPlayer player, int groupId, CmdArgs args) =>
+            /*api.RegisterCommand("thermosys", "Manipulates the thermodynamics system", "Thermodynamics System Check", (IServerPlayer player, int groupId, CmdArgs args) =>
             {
                 string order = args.PopWord();
 
@@ -213,26 +213,26 @@ namespace ThermodynamicApi
                         break;
                 }
 
-            }, Privilege.time);
+            }, Privilege.time);*/
 
             api.World.RegisterGameTickListener((dt) =>
             {
 
-                if (fluidSpreader?.Stopping == true)
+                if (thermoThread?.Stopping == true)
                 {
-                    lock (spreadFluidLock)
+                    lock (matterDynamicsLock)
                     {
-                        Dictionary<BlockPos, Dictionary<string, float>> backup = new Dictionary<BlockPos, Dictionary<string, float>>();
+                        Dictionary<BlockPos, Dictionary<string, MaterialStates>> backup = new Dictionary<BlockPos, Dictionary<string, MaterialStates>>();
 
-                        foreach (var pos in spreadGasQueue)
+                        foreach (var pos in matterDynamicsQueue)
                         {
                             if (!backup.ContainsKey(pos.Key)) backup.Add(pos.Key, pos.Value);
                         }
 
-                        spreadGasQueue = backup;
+                        matterDynamicsQueue = backup;
                     }
-                    fluidSpreader.Stopping = false;
-                    fluidSpreader.Start(spreadGasQueue);
+                    thermoThread.Stopping = false;
+                    thermoThread.Start(matterDynamicsQueue);
                 }
             }, 30);
         }
@@ -243,11 +243,11 @@ namespace ThermodynamicApi
 
             BlockPos spreadPos;
 
-            Dictionary<string, MaterialStates> gases = ThermodynamicHelper.DeserializeGasTreeData(data, out spreadPos);
+            Dictionary<string, MaterialStates> fluids = ThermodynamicHelper.DeserializeThermoTreeData(data, out spreadPos);
 
             if (spreadPos == null) return;
 
-            QueueGasExchange(gases, spreadPos);
+            QueueGasExchange(fluids, spreadPos);
         }
 
         private void onSaveGameLoaded()
@@ -436,7 +436,7 @@ namespace ThermodynamicApi
             return null;
         }
 
-        public void SetGases(BlockPos pos, Dictionary<string, float> gasputhere)
+        public void SetFluids(BlockPos pos, Dictionary<string, MaterialStates> fluidputhere)
         {
             Dictionary<int, Dictionary<string, float>> gasesOfChunk = getOrCreateGasesAt(pos);
             if (gasesOfChunk == null) return;
@@ -444,11 +444,11 @@ namespace ThermodynamicApi
             int index3d = toLocalIndex(pos);
             if (!gasesOfChunk.ContainsKey(index3d))
             {
-                gasesOfChunk.Add(index3d, gasputhere);
+                gasesOfChunk.Add(index3d, fluidputhere);
             }
             else
             {
-                gasesOfChunk[index3d] = gasputhere;
+                gasesOfChunk[index3d] = fluidputhere;
             }
 
 
@@ -606,7 +606,7 @@ namespace ThermodynamicApi
 
         public void QueueGasExchange(Dictionary<string, MaterialStates> adds, BlockPos pos, float scrub = 0, bool ignoreLiquids = false, bool ignoreSide = false)
         {
-            if (adds == null) adds = new Dictionary<string, float>();
+            if (adds == null) adds = new Dictionary<string, MaterialStates>();
 
             if (scrub > 0) adds.Add("THISISAPLANT", 0);
             if (ignoreLiquids) adds.Add("IGNORELIQUIDS", 0);
@@ -675,7 +675,7 @@ namespace ThermodynamicApi
             int gasSpreadTick = 10;
             IBlockAccessor blockAccessor;
             ICoreServerAPI sapi;
-            Dictionary<BlockPos, Dictionary<string, float>> checkSpread;
+            Dictionary<BlockPos, Dictionary<string, MaterialStates>> checkSpread;
             ThermodynamicSystem gasSys;
 
             public bool Stopping { get; set; }
@@ -687,7 +687,7 @@ namespace ThermodynamicApi
                 this.gasSys = gassys;
             }
 
-            public void Start(Dictionary<BlockPos, Dictionary<string, float>> checkSpread)
+            public void Start(Dictionary<BlockPos, Dictionary<string, MaterialStates>> checkSpread)
             {
                 this.checkSpread = checkSpread;
 

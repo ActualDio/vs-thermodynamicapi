@@ -27,16 +27,16 @@ namespace ThermodynamicApi.ApiHelper
             try
             {
                 IAsset asset = api.Assets.Get("thermoapi:config/gases.json");
-                LiteGasDict = asset.ToObject<Dictionary<string, GasInfoLite>>();
-                if (LiteGasDict == null) LiteGasDict = new Dictionary<string, GasInfoLite>();
+                LiteFluidDict = asset.ToObject<Dictionary<string, FluidInfoLite>>();
+                if (LiteFluidDict == null) LiteFluidDict = new Dictionary<string, FluidInfoLite>();
             }
             catch
             {
-                LiteGasDict = new Dictionary<string, GasInfoLite>();
+                LiteFluidDict = new Dictionary<string, FluidInfoLite>();
             }
         }
 
-        static Dictionary<string, GasInfoLite> LiteGasDict;
+        static Dictionary<string, FluidInfoLite> LiteFluidDict;
 
         //Returns the thermodynamic info for the entire chunk; Does not create fluids or chunk data
         public Dictionary<int, Dictionary<string, MaterialStates>> GetThermodynamicInfoForChunk(BlockPos pos)
@@ -150,7 +150,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Deserializes a fluid spreading event
-        public static Dictionary<string, MaterialStates> DeserializeFluidTreeData(IAttribute data, out BlockPos pos)
+        public static Dictionary<string, MaterialStates> DeserializeThermoTreeData(IAttribute data, out BlockPos pos)
         {
             TreeAttribute tree = data as TreeAttribute;
             pos = tree?.GetBlockPos("pos");
@@ -166,7 +166,7 @@ namespace ThermodynamicApi.ApiHelper
                 foreach (var fluid in thermoInfo)
                 {
                     MaterialStates? value = SerializerUtil.Deserialize<MaterialStates>(thermoInfo.GetBytes(fluid.Key));
-                    if (value.GetValueOrDefault() == default(MaterialStates)) continue;
+                    if (value.GetValueOrDefault() == default) continue;
 
                     dFluids.Add(fluid.Key, value.Value);
                 }
@@ -182,45 +182,40 @@ namespace ThermodynamicApi.ApiHelper
 
             if (!dest.ContainsKey(fluidName))
             {
-                dest.Add(fluidName, fluidInfo);
+                dest.Add(fluidName, fluidInfo.Value);
             }
             else
             {
-                dest[fluidName] += fluidInfo;
+                dest[fluidName] += fluidInfo.Value;
             }
         }
 
         //Cleanly merges two fluid dictionaries together
-        public static void MergeGasDicts(Dictionary<string, float> source, ref Dictionary<string, float> dest)
+        public static void MergeFluidDicts(Dictionary<string, MaterialStates> source, ref Dictionary<string, MaterialStates> dest)
         {
             if (source == null || dest == null) return;
 
-            foreach (var gas in source)
+            foreach (var fluid in source)
             {
-                if (gas.Key == "RADIUS")
-                {
-                    if (!dest.ContainsKey(gas.Key)) dest.Add(gas.Key, gas.Value);
-                    else if (dest[gas.Key] < gas.Value) dest[gas.Key] = gas.Value;
-                }
-                else MergeFluidIntoDict(gas.Key, gas.Value, ref dest);
+                MergeFluidIntoDict(fluid.Key, fluid.Value, ref dest);
             }
         }
 
         //Returns the air quality for this position, ranging from 1 to -1. Postive values allow breathing, negative values suffocate
-        public float GetAirAmount(BlockPos pos)
+        /*public float GetAirAmount(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return 1;
-            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
+            Dictionary<string, MaterialStates> fluidsHere = GetThermodynamicInfo(pos);
 
-            if (gasesHere == null) return 1;
+            if (fluidsHere == null) return 1;
 
             float conc = 0;
 
-            foreach (var gas in gasesHere)
+            foreach (var fluid in fluidsHere)
             {
-                if (LiteGasDict.ContainsKey(gas.Key))
+                if (LiteFluidDict.ContainsKey(fluid.Key))
                 {
-                    if (LiteGasDict[gas.Key] != null) conc += gas.Value * LiteGasDict[gas.Key].QualityMult; else conc += gas.Value;
+                    if (LiteFluidDict[fluid.Key] != null) conc += fluid.Value * LiteFluidDict[fluid.Key].QualityMult; else conc += fluid.Value;
                 }
             }
 
@@ -228,90 +223,90 @@ namespace ThermodynamicApi.ApiHelper
             if (conc < 0) return 1;
 
             return 1 - conc;
-        }
+        }*/
 
         //Returns the aciditiy for an area between 0 and 1
-        public float GetAcidity(BlockPos pos)
+        /*public float GetAcidity(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return 0;
-            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
+            Dictionary<string, float> fluidsHere = GetThermodynamicInfo(pos);
 
-            if (gasesHere == null) return 0;
+            if (fluidsHere == null) return 0;
 
             float conc = 0;
 
-            foreach (var gas in gasesHere)
+            foreach (var fluid in fluidsHere)
             {
-                if (LiteGasDict.ContainsKey(gas.Key))
+                if (LiteFluidDict.ContainsKey(fluid.Key))
                 {
-                    if (LiteGasDict[gas.Key] != null && LiteGasDict[gas.Key].Acidic) conc += gas.Value;
+                    if (LiteFluidDict[fluid.Key] != null && LiteFluidDict[fluid.Key].Acidic) conc += fluid.Value;
                     if (conc >= 1) return 1;
                 }
             }
 
             return conc;
-        }
+        }*/
 
         //Returns whether there is a flammable amount of fluid at this position
-        public bool IsVolatile(BlockPos pos)
+        /*public bool IsVolatile(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
-            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
+            Dictionary<string, float> fluidsHere = GetThermodynamicInfo(pos);
 
-            if (gasesHere == null) return false;
+            if (fluidsHere == null) return false;
 
-            foreach (var gas in gasesHere)
+            foreach (var fluid in fluidsHere)
             {
-                if (LiteGasDict.ContainsKey(gas.Key))
+                if (LiteFluidDict.ContainsKey(fluid.Key))
                 {
-                    if (LiteGasDict[gas.Key].FlammableAmount > 0 && gas.Value >= LiteGasDict[gas.Key].FlammableAmount) return true;
+                    if (LiteFluidDict[fluid.Key].FlammableAmount > 0 && fluid.Value >= LiteFluidDict[fluid.Key].FlammableAmount) return true;
                 }
             }
 
             return false;
-        }
+        }*/
 
         //Returns whether there is enough explosive fluid here to explode
-        public bool ShouldExplode(BlockPos pos)
+        /*public bool ShouldExplode(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
-            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
+            Dictionary<string, float> fluidsHere = GetThermodynamicInfo(pos);
 
-            if (gasesHere == null) return false;
+            if (fluidsHere == null) return false;
 
-            foreach (var gas in gasesHere)
+            foreach (var fluid in fluidsHere)
             {
-                if (LiteGasDict.ContainsKey(gas.Key))
+                if (LiteFluidDict.ContainsKey(fluid.Key))
                 {
-                    if (LiteGasDict[gas.Key].ExplosionAmount <= gas.Value) return true;
+                    if (LiteFluidDict[fluid.Key].ExplosionAmount <= fluid.Value) return true;
                 }
             }
 
             return false;
-        }
+        }*/
 
         //Determines if there is enough of the fluid to be toxic
-        public bool IsToxic(string name, float amount)
+        /*public bool IsToxic(string name, float amount)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
-            if (!LiteGasDict.ContainsKey(name)) return true;
+            if (!LiteFluidDict.ContainsKey(name)) return true;
 
-            return amount > LiteGasDict[name].ToxicAt;
-        }
+            return amount > LiteFluidDict[name].ToxicAt;
+        }*/
 
         //Collects gases and voids them in the world and returns them as a table
         //Note: Because this happens on the main thread and fluid spreading happens on an off thread, it may be somewhat inaccurate
-        public Dictionary<string, float> CollectGases(BlockPos pos, int radius, string[] gasFilter)
+        public Dictionary<string, MaterialStates> CollectFluids(BlockPos pos, int radius, string[] fluidFilter)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return null;
             
             IBlockAccessor blockAccessor = api.World.BlockAccessor;
             if (pos.Y < 1 || pos.Y > blockAccessor.MapSizeY) return null;
 
-            Dictionary<string, float> result = new Dictionary<string, float>();
+            Dictionary<string, MaterialStates> result = new Dictionary<string, MaterialStates>();
             Queue<Vec3i> checkQueue = new Queue<Vec3i>();
             Dictionary<Vec3i, IWorldChunk> chunks = new Dictionary<Vec3i, IWorldChunk>();
-            Dictionary<Vec3i, Dictionary<int, Dictionary<string, float>>> gasChunks = new Dictionary<Vec3i, Dictionary<int, Dictionary<string, float>>>();
+            Dictionary<Vec3i, Dictionary<int, Dictionary<string, MaterialStates>>> fluidChunks = new Dictionary<Vec3i, Dictionary<int, Dictionary<string, MaterialStates>>>();
             HashSet<BlockPos> markedPositions = new HashSet<BlockPos>();
             Dictionary<int, Block> blocks = new Dictionary<int, Block>();
             Cuboidi bounds = new Cuboidi(pos.X - radius, pos.Y - radius, pos.Z - radius, pos.X + radius, pos.Y + radius, pos.Z + radius);
@@ -328,7 +323,7 @@ namespace ThermodynamicApi.ApiHelper
 
                         Vec3i currentChunkPos = new Vec3i(x, y, z);
                         chunks.Add(currentChunkPos, chunk);
-                        gasChunks.Add(currentChunkPos, GetGasesForChunk(chunk));
+                        fluidChunks.Add(currentChunkPos, GetThermodynamicInfoForChunk(chunk));
 
                     }
                 }
@@ -341,15 +336,15 @@ namespace ThermodynamicApi.ApiHelper
             markedPositions.Add(pos.Copy());
             Block starter = blockAccessor.GetBlock(pos);
             blocks.Add(starter.BlockId, starter);
-            if (gasChunks[originChunkVec] != null && gasChunks[originChunkVec].ContainsKey(toLocalIndex(pos)))
+            if (fluidChunks[originChunkVec] != null && fluidChunks[originChunkVec].ContainsKey(toLocalIndex(pos)))
             {
-                Dictionary<string, float> gasesHere = gasChunks[originChunkVec][toLocalIndex(pos)];
-                if (gasFilter == null) MergeGasDicts(gasesHere, ref result);
+                Dictionary<string, MaterialStates> fluidsHere = fluidChunks[originChunkVec][toLocalIndex(pos)];
+                if (fluidFilter == null) MergeFluidDicts(fluidsHere, ref result);
                 else
                 {
-                    foreach (var gas in gasesHere)
+                    foreach (var fluid in fluidsHere)
                     {
-                        if (gasFilter.Contains(gas.Key)) MergeFluidIntoDict(gas.Key, gas.Value, ref result);
+                        if (fluidFilter.Contains(fluid.Key)) MergeFluidIntoDict(fluid.Key, fluid.Value, ref result);
                     }
                 }
             }
@@ -361,9 +356,9 @@ namespace ThermodynamicApi.ApiHelper
 
                 Block parent = null;
                 IWorldChunk parentChunk = chunks[parentChunkVec];
-                if (!blocks.ContainsKey(parentChunk.Unpack_AndReadBlock(toLocalIndex(bpos.AsBlockPos)))) continue;
+                if (!blocks.ContainsKey(parentChunk.UnpackAndReadBlock(toLocalIndex(bpos.AsBlockPos),BlockLayersAccess.Fluid))) continue;
 
-                parent = blocks[parentChunk.Unpack_AndReadBlock(toLocalIndex(bpos.AsBlockPos))];
+                parent = blocks[parentChunk.UnpackAndReadBlock(toLocalIndex(bpos.AsBlockPos), BlockLayersAccess.Fluid)];
 
                 foreach (BlockFacing facing in faces)
                 {
@@ -379,21 +374,21 @@ namespace ThermodynamicApi.ApiHelper
 
                     if (chunk == null) continue;
 
-                    int blockId = chunk.Unpack_AndReadBlock(toLocalIndex(curPos));
+                    int blockId = chunk.UnpackAndReadBlock(toLocalIndex(curPos), BlockLayersAccess.MostSolid);
 
                     if (!blocks.TryGetValue(blockId, out atPos)) atPos = blocks[blockId] = blockAccessor.GetBlock(blockId);
 
                     if (SolidCheck(atPos, facing.Opposite)) continue;
 
-                    if (gasChunks[curChunkVec] != null && gasChunks[curChunkVec].ContainsKey(chunkBid))
+                    if (fluidChunks[curChunkVec] != null && fluidChunks[curChunkVec].ContainsKey(chunkBid))
                     {
-                        Dictionary<string, float> gasesHere = gasChunks[curChunkVec][chunkBid];
-                        if (gasFilter == null) MergeGasDicts(gasesHere, ref result);
+                        Dictionary<string, float> gasesHere = fluidChunks[curChunkVec][chunkBid];
+                        if (fluidFilter == null) MergeGasDicts(gasesHere, ref result);
                         else
                         {
                             foreach (var gas in gasesHere)
                             {
-                                if (gasFilter.Contains(gas.Key)) MergeFluidIntoDict(gas.Key, gas.Value, ref result);
+                                if (fluidFilter.Contains(gas.Key)) MergeFluidIntoDict(gas.Key, gas.Value, ref result);
                             }
                         }
                     }
@@ -442,7 +437,7 @@ namespace ThermodynamicApi.ApiHelper
 
         //Internal class used to get the fluid information from the config.
         [JsonObject(MemberSerialization.OptIn)]
-        public class GasInfoLite
+        public class FluidInfoLite
         {
             [JsonProperty]
             public bool Light;
