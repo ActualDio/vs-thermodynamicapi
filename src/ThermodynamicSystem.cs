@@ -757,7 +757,6 @@ namespace ThermodynamicApi
                 Dictionary<string, MatterProperties> collectedMatter = adds ?? new Dictionary<string, MatterProperties>();
                 Queue<Vec3i> checkQueue = new Queue<Vec3i>();
                 List<MaterialsChunk> chunks = new List<MaterialsChunk>();
-                Cuboidi bounds = new Cuboidi(pos.X - radius, pos.Y - radius, pos.Z - radius, pos.X + radius, pos.Y + radius, pos.Z + radius);
                 HashSet<BlockPos>[] layers = new HashSet<BlockPos>[bounds.MaxY - bounds.MinY];
                 Dictionary<int, Block> blocks = new Dictionary<int, Block>();
                 float windspeed = -1;
