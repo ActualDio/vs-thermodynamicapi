@@ -166,7 +166,7 @@ namespace ThermodynamicApi
         {
             if (__result && world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, blockSel.Position);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(null, blockSel.Position);
             }
         }
     }
@@ -195,7 +195,7 @@ namespace ThermodynamicApi
         {
             if (world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, position);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(null, position);
             }
         }
     }

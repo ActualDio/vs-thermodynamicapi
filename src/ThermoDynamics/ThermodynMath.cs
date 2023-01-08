@@ -9,34 +9,34 @@ using System.Threading.Tasks;
 
 namespace ThermodynamicApi.ThermoDynamics
 {
-    public struct Nullable<MaterialStates> {}
+    public struct Nullable<MatterProperties> {}
     /// <summary>
     /// The different state variables for the given material of a block
     /// </summary>
-    public struct MaterialStates
+    public struct MatterProperties
     {
         // Volume for a cube is assumed to be 1 cubic meter
         public float? MolarDensity { get; set; } // in moles per cubic meter
         public float? Pressure { get; set; } // in Pascals
         public float? Temperature { get; set; } // in Kelvin
-        public MaterialStates(float? density = null, float? press = null, float? temp = null)
+        public MatterProperties(float? density = null, float? press = null, float? temp = null)
         {
             MolarDensity = density;
             Pressure = press;
             Temperature = temp;
             if (density == null && press == null && temp == null);
         }
-        public static bool operator ==(MaterialStates a, MaterialStates b)
+        public static bool operator ==(MatterProperties a, MatterProperties b)
         {
             if (a == null && b == null) return true;
             if (a == null || b == null) return false;
             return (a.MolarDensity == b.MolarDensity && a.Temperature == b.Temperature && a.Pressure == b.Pressure);
         }
-        public static bool operator !=(MaterialStates a, MaterialStates b)
+        public static bool operator !=(MatterProperties a, MatterProperties b)
         {
             return !(a == b);
         }
-        public static MaterialStates operator +(MaterialStates a, MaterialStates b)
+        public static MatterProperties operator +(MatterProperties a, MatterProperties b)
         {
             if (a == default) return b;
             if (b == default) return a;
@@ -45,7 +45,7 @@ namespace ThermodynamicApi.ThermoDynamics
         }
         public override bool Equals(object obj)
         {
-            return this == (MaterialStates)obj;
+            return this == (MatterProperties)obj;
         }
         public override int GetHashCode()
         {
@@ -82,7 +82,7 @@ namespace ThermodynamicApi.ThermoDynamics
             return sum;
         }
 
-        static MaterialStates IdealGasLaw(MaterialStates state)
+        static MatterProperties IdealGasLaw(MatterProperties state)
         {
             return state;
         }

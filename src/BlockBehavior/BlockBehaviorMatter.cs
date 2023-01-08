@@ -6,7 +6,7 @@ using Vintagestory.API.MathTools;
 
 namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorGas : Vintagestory.API.Common.BlockBehavior
+    public class BlockBehaviorMatter : Vintagestory.API.Common.BlockBehavior
     {
         public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
         {
@@ -16,7 +16,7 @@ namespace ThermodynamicApi.BlockBehavior
             ThermodynamicSystem gasworks = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
             if (gasworks == null) return null;
 
-            Dictionary<string, float> gasesHere = gasworks.GetGases(pos);
+            Dictionary<string, float> gasesHere = gasworks.GetMatter(pos);
 
             if (gasesHere == null || gasesHere.Count < 1) return null;
 
@@ -37,7 +37,7 @@ namespace ThermodynamicApi.BlockBehavior
 
             ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
-            gasHandler.QueueGasExchange(null, pos);
+            gasHandler.QueueMatterChange(null, pos);
         }
 
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ref EnumHandling handling)
@@ -48,7 +48,7 @@ namespace ThermodynamicApi.BlockBehavior
 
             ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
 
-            gasHandler.QueueGasExchange(null, blockPos);
+            gasHandler.QueueMatterChange(null, blockPos);
         }
 
         public override void OnNeighbourBlockChange(IWorldAccessor world, BlockPos pos, BlockPos neibpos, ref EnumHandling handling)
@@ -57,11 +57,11 @@ namespace ThermodynamicApi.BlockBehavior
 
             if (world.Side == EnumAppSide.Server && world.Rand.NextDouble() <= ThermodynamicConfig.Loaded.UpdateSpreadGasChance)
             {
-                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(null, pos);
+                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(null, pos);
             }
         }
 
-        public BlockBehaviorGas(Block block) : base(block)
+        public BlockBehaviorMatter(Block block) : base(block)
         {
         }
     }

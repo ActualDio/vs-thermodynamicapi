@@ -98,14 +98,12 @@
   <ItemGroup>
     <Compile Include="src\BlockBehavior\BlockBehaviorProduceGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorConsumeGas.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviorLiquid.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviorSolid.cs" />
     <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorConsumeFluid.cs" />
     <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorProduceFluid.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorExplosionGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorMineGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorSparkGas.cs" />
-    <Compile Include="src\BlockBehavior\BlockBehaviorGas.cs" />
+    <Compile Include="src\BlockBehavior\BlockBehaviorMatter.cs" />
     <Compile Include="src\Blocks\BlockGas.cs" />
     <Compile Include="src\Blocks\BlockLiquid.cs" />
     <Compile Include="src\Blocks\BlockSolid.cs" />
@@ -116,11 +114,10 @@
     <Compile Include="src\EntityBehavior\EntityBehaviorGas.cs" />
     <Compile Include="src\SystemControl\MaterialsChunk.cs" />
     <Compile Include="src\For Other Mods\ThermodynamicHelper.cs" />
-    <Compile Include="src\ThermoDynamics\FluidInfo.cs" />
+    <Compile Include="src\ThermoDynamics\MatterInfo.cs" />
     <Compile Include="src\ThermodynamicSystem.cs" />
     <Compile Include="src\GUI\HudElementAirBar.cs" />
     <Compile Include="src\SystemControl\Patches.cs" />
-    <Compile Include="src\ThermoDynamics\SolidInfo.cs" />
     <Compile Include="src\ThermoDynamics\ThermodynMath.cs" />
   </ItemGroup>
   <ItemGroup>

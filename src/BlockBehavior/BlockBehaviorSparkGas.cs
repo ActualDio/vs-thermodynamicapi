@@ -4,7 +4,7 @@ using Vintagestory.API.Server;
 
 namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorSparkGas : BlockBehaviorGas
+    public class BlockBehaviorSparkGas : BlockBehaviorMatter
     {
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref EnumHandling handling)
         {

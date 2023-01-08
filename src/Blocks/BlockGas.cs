@@ -16,10 +16,10 @@ namespace ThermodynamicApi.Blocks
 
             if (world.Side != EnumAppSide.Server) return;
             
-            Dictionary<string, MaterialStates> tester = new Dictionary<string, MaterialStates>();
+            Dictionary<string, MatterProperties> tester = new Dictionary<string, MatterProperties>();
             tester.Add(FirstCodePart(1), 1);
 
-            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>().QueueGasExchange(tester, blockPos);
+            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>().QueueMatterChange(tester, blockPos);
             world.BlockAccessor.SetBlock(0, blockPos);
         }
 

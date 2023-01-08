@@ -233,7 +233,7 @@ namespace ThermodynamicApi.EntityBehavior
             {
                 effectsTimer = 0;
 
-                Dictionary<string, float> gasesHere = atmosphere.GetGases(HeadBlock);
+                Dictionary<string, float> gasesHere = atmosphere.GetMatter(HeadBlock);
                 bool usedMask = false;
 
 

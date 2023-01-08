@@ -11,7 +11,7 @@ namespace ThermodynamicApi.SystemControl
     public class MaterialsChunk
     {
         public IWorldChunk Chunk;
-        public Dictionary<int, Dictionary<string, MaterialStates>> Materials;
+        public Dictionary<int, Dictionary<string, MatterProperties>> Materials;
 
         public int X;
         public int Y;
@@ -19,7 +19,7 @@ namespace ThermodynamicApi.SystemControl
 
         bool shouldSave;
 
-        public MaterialsChunk(IWorldChunk newChunk, Dictionary<int, Dictionary<string, MaterialStates>> newMaterials, int x, int y, int z)
+        public MaterialsChunk(IWorldChunk newChunk, Dictionary<int, Dictionary<string, MatterProperties>> newMaterials, int x, int y, int z)
         {
             Chunk = newChunk;
             Materials = newMaterials;
@@ -44,11 +44,11 @@ namespace ThermodynamicApi.SystemControl
             serverChannel.BroadcastPacket(new ChunkThermoData() { chunkX = X, chunkY = Y, chunkZ = Z, Data = data });
         }
 
-        public void TakeGas(ref Dictionary<string, MaterialStates> taker, int point)
+        public void TakeGas(ref Dictionary<string, MatterProperties> taker, int point)
         {
             if (Materials == null || !Materials.ContainsKey(point)) return;
             
-            Dictionary<string, MaterialStates> takeFrom = Materials[point];
+            Dictionary<string, MatterProperties> takeFrom = Materials[point];
             if (takeFrom == null || takeFrom.Count < 1) return;
 
             foreach (var gas in takeFrom)

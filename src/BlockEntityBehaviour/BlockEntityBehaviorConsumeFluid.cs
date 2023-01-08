@@ -12,8 +12,8 @@ namespace ThermodynamicApi.BlockEntityBehaviour
     public class BlockEntityBehaviorConsumeFluid : BlockEntityBehavior
     {
         ThermodynamicSystem thermoHandler;
-        public Dictionary<string, MaterialStates> liquidScrub;
-        public MaterialStates scrubAmount;
+        public Dictionary<string, MatterProperties> liquidScrub;
+        public MatterProperties scrubAmount;
         BlockPos blockPos
         {
             get { return Blockentity.Pos; }
@@ -24,8 +24,8 @@ namespace ThermodynamicApi.BlockEntityBehaviour
             base.Initialize(api, properties);
             thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
             Blockentity.RegisterGameTickListener(RemoveFluid, 5000);
-            scrubAmount = properties["scrubAmount"].AsObject<MaterialStates>();
-            liquidScrub = new Dictionary<string, MaterialStates>();
+            scrubAmount = properties["scrubAmount"].AsObject<MatterProperties>();
+            liquidScrub = new Dictionary<string, MatterProperties>();
             liquidScrub.Add("THISISAPLANT", scrubAmount);
         }
 
@@ -38,7 +38,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
 
             if (bpc.Inventory[0].Empty || bpc.Inventory[0].Itemstack.Block?.BlockMaterial != EnumBlockMaterial.Plant || bpc.Inventory[0].Itemstack.Collectible.Code.Path.StartsWith("mushroom")) return;
 
-            thermoHandler.QueueGasExchange(new Dictionary<string, MaterialStates>(liquidScrub), blockPos);
+            thermoHandler.QueueMatterChange(new Dictionary<string, MatterProperties>(liquidScrub), blockPos);
         }
 
         public BlockEntityBehaviorConsumeFluid(BlockEntity blockentity) : base(blockentity)

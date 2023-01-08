@@ -7,14 +7,14 @@ using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorProduceGas : BlockBehaviorGas
+    public class BlockBehaviorProduceGas : BlockBehaviorMatter
     {
-        public Dictionary<string, MaterialStates> produceGas;
+        public Dictionary<string, MatterProperties> produceGas;
 
         public override void Initialize(JsonObject properties)
         {
             base.Initialize(properties);
-            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
+            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MatterProperties>());
         }
 
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos blockPos, ref EnumHandling handling)
@@ -23,7 +23,7 @@ namespace ThermodynamicApi.BlockBehavior
 
             if (!ThermodynamicConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
 
-            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(new Dictionary<string, MaterialStates>(produceGas), blockPos);
+            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(new Dictionary<string, MatterProperties>(produceGas), blockPos);
         }
 
         public BlockBehaviorProduceGas(Block block) : base(block)

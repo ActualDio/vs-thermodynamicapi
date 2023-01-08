@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorMineGas : BlockBehaviorGas
+    public class BlockBehaviorMineGas : BlockBehaviorMatter
     {
         public Dictionary<string, float> produceGas;
         public bool onRemove = false;

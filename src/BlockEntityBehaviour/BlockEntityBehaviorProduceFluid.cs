@@ -12,7 +12,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
     public class BlockEntityBehaviorProduceFluid : BlockEntityBehavior
     {
         ThermodynamicSystem thermoHandler;
-        public Dictionary<string, MaterialStates> produceFluid;
+        public Dictionary<string, MatterProperties> produceFluid;
         int updateTimeInMS;
         double updateTimeInHours;
         double lastTimeProduced;
@@ -26,7 +26,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         {
             base.Initialize(api, properties);
             thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
-            produceFluid = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
+            produceFluid = properties["produceGas"].AsObject(new Dictionary<string, MatterProperties>());
             updateTimeInMS = properties["updateMS"].AsInt(10000);
             updateTimeInHours = properties["updateHours"].AsDouble();
             Blockentity.RegisterGameTickListener(ProduceGas, updateTimeInMS);
@@ -39,7 +39,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
 
             lastTimeProduced = Blockentity.Api.World.Calendar.TotalHours;
 
-            thermoHandler.QueueGasExchange(new Dictionary<string, MaterialStates>(produceFluid), blockPos);
+            thermoHandler.QueueMatterChange(new Dictionary<string, MatterProperties>(produceFluid), blockPos);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)

@@ -7,14 +7,14 @@ using ThermodynamicApi.ThermoDynamics;
 
 namespace ThermodynamicApi.BlockBehavior
 {
-    public class BlockBehaviorExplosionGas : BlockBehaviorGas
+    public class BlockBehaviorExplosionGas : BlockBehaviorMatter
     {
-        public Dictionary<string, MaterialStates> produceGas;
+        public Dictionary<string, MatterProperties> produceGas;
 
         public override void Initialize(JsonObject properties)
         {
             base.Initialize(properties);
-            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MaterialStates>());
+            produceGas = properties["produceGas"].AsObject(new Dictionary<string, MatterProperties>());
         }
 
         public override void OnBlockExploded(IWorldAccessor world, BlockPos pos, BlockPos explosionCenter, EnumBlastType blastType, ref EnumHandling handling)
