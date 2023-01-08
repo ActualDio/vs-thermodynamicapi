@@ -1,25 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ThermodynamicApi.ThermoDynamics
 {
+    public struct Nullable<MaterialStates> {}
     /// <summary>
     /// The different state variables for the given material of a block
     /// </summary>
     public struct MaterialStates
     {
-        float MolarDensity; // in moles per cubic meter
-        float Pressure; // in Pascals
-        float Temperature; // in Kelvin
         // Volume for a cube is assumed to be 1 cubic meter
-        public MaterialStates(float quantity, float pressure, float temperature)
+        public float? MolarDensity { get; set; } // in moles per cubic meter
+        public float? Pressure { get; set; } // in Pascals
+        public float? Temperature { get; set; } // in Kelvin
+        public MaterialStates(float? density = null, float? press = null, float? temp = null)
         {
-            MolarDensity= quantity;
-            Pressure= pressure;
-            Temperature= temperature;
+            MolarDensity = density;
+            Pressure = press;
+            Temperature = temp;
+            if (density == null && press == null && temp == null);
+        }
+        public static bool operator ==(MaterialStates a, MaterialStates b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+            return (a.MolarDensity == b.MolarDensity && a.Temperature == b.Temperature && a.Pressure == b.Pressure);
+        }
+        public static bool operator !=(MaterialStates a, MaterialStates b)
+        {
+            return !(a == b);
+        }
+        public override bool Equals(object obj)
+        {
+            return this == (MaterialStates)obj;
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 

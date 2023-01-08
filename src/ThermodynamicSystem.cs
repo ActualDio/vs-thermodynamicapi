@@ -881,7 +881,7 @@ namespace ThermodynamicApi
                     {
                         if (FluidDictionary.ContainsKey(gas.Key) && (FluidDictionary[gas.Key].FlammableAmount <= 1 || FluidDictionary[gas.Key].ExplosionAmount <= 1))
                         {
-                            if (FluidDictionary[gas.Key].BurnInto != null) ThermodynamicHelper.MergeGasIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
+                            if (FluidDictionary[gas.Key].BurnInto != null) ThermodynamicHelper.MergeFluidIntoDict(FluidDictionary[gas.Key].BurnInto, gas.Value, ref modifier);
 
                             modifier.Remove(gas.Key);
                         }

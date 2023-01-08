@@ -38,7 +38,7 @@ namespace ThermodynamicApi.ApiHelper
 
         static Dictionary<string, GasInfoLite> LiteGasDict;
 
-        //Returns the gases for the entire chunk; Does not create gases or chunk data
+        //Returns the thermodynamic info for the entire chunk; Does not create fluids or chunk data
         public Dictionary<int, Dictionary<string, MaterialStates>> GetThermodynamicInfoForChunk(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
@@ -66,8 +66,8 @@ namespace ThermodynamicApi.ApiHelper
             return thermoInfoOfChunk;
         }
 
-        //Returns the gases for the entire chunk; Does not create gases or chunk data
-        public Dictionary<int, Dictionary<string, float>> GetGasesForChunk(IWorldChunk chunk)
+        //Returns the thermodynamic info for the entire chunk; Does not create fluids or chunk data
+        public Dictionary<int, Dictionary<string, MaterialStates>> GetThermodynamicInfoForChunk(IWorldChunk chunk)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             byte[] data;
@@ -76,56 +76,56 @@ namespace ThermodynamicApi.ApiHelper
 
             data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, float>> gasesOfChunk = null;
+            Dictionary<int, Dictionary<string, MaterialStates>> thermoInfoOfChunk = null;
 
             if (data != null)
             {
                 try
                 {
-                    gasesOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, float>>>(data);
+                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialStates>>>(data);
                 }
                 catch (Exception)
                 {
-                    gasesOfChunk = null;
+                    thermoInfoOfChunk = null;
                 }
             }
 
-            return gasesOfChunk;
+            return thermoInfoOfChunk;
         }
 
-        //Returns gases for a particular block position
-        public Dictionary<string, float> GetGases(BlockPos pos)
+        //Returns thermodynamic info for a particular block position
+        public Dictionary<string, MaterialStates> GetThermodynamicInfo(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
-            Dictionary<int, Dictionary<string, float>> gasesOfChunk = GetThermodynamicInfoForChunk(pos);
-            if (gasesOfChunk == null) return null;
+            Dictionary<int, Dictionary<string, MaterialStates>> thermoInfoOfChunk = GetThermodynamicInfoForChunk(pos);
+            if (thermoInfoOfChunk == null) return null;
 
             int index3d = toLocalIndex(pos);
-            if (!gasesOfChunk.ContainsKey(index3d)) return null;
+            if (!thermoInfoOfChunk.ContainsKey(index3d)) return null;
 
-            return gasesOfChunk[index3d];
+            return thermoInfoOfChunk[index3d];
         }
 
-        //Returns the amount of the specified gas at a position if it is present
-        public float GetGas(BlockPos pos, string name)
+        //Returns the thermodynamic info of the specified fluid at a position if it is present
+        public MaterialStates? GetFluidThermodynamicInfo(BlockPos pos, string name)
         {
-            if (!api.ModLoader.IsModEnabled("thermoapi")) return 0;
-            Dictionary<string, float> gasesHere = GetGases(pos);
+            if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
+            Dictionary<string, MaterialStates> fluidsHere = GetThermodynamicInfo(pos);
 
-            if (gasesHere == null || !gasesHere.ContainsKey(name)) return 0;
+            if (fluidsHere == null || !fluidsHere.ContainsKey(name)) return null;
 
-            return gasesHere[name];
+            return fluidsHere[name];
         }
 
-        //Serializes and sends a gas spread event on the bus
-        public void SendGasSpread(BlockPos pos, Dictionary<string, float> gases = null)
+        //Serializes and sends a fluid spread event on the bus
+        public void SendFluidSpread(BlockPos pos, Dictionary<string, MaterialStates> fluids = null)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return;
-            (api as ICoreServerAPI)?.Event.PushEvent("spreadGas", SerializeGasTreeData(pos, gases));
+            (api as ICoreServerAPI)?.Event.PushEvent("spreadFluid", SerializeFluidTreeData(pos, fluids));
         }
 
-        //Serializes a gas spreading event
-        public TreeAttribute SerializeGasTreeData(BlockPos pos, Dictionary<string, float> gases)
+        //Serializes a fluid spreading event
+        public TreeAttribute SerializeFluidTreeData(BlockPos pos, Dictionary<string, MaterialStates> fluids)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             if (pos == null) return null;
@@ -134,63 +134,63 @@ namespace ThermodynamicApi.ApiHelper
 
             tree.SetBlockPos("pos", pos);
 
-            if (gases != null && gases.Count > 0)
+            if (fluids != null && fluids.Count > 0)
             {
-                TreeAttribute sGases = new TreeAttribute();
+                TreeAttribute sFluids = new TreeAttribute();
 
-                foreach (var gas in gases)
+                foreach (var fluid in fluids)
                 {
-                    sGases.SetFloat(gas.Key, gas.Value);
+                    sFluids.SetBytes(fluid.Key, SerializerUtil.Serialize(fluid.Value));
                 }
 
-                tree.SetAttribute("thermoinfo", sGases);
+                tree.SetAttribute("thermoinfo", sFluids);
             }
 
             return tree;
         }
 
-        //Deserializes a gas spreading event
-        public static Dictionary<string, MaterialStates> DeserializeGasTreeData(IAttribute data, out BlockPos pos)
+        //Deserializes a fluid spreading event
+        public static Dictionary<string, MaterialStates> DeserializeFluidTreeData(IAttribute data, out BlockPos pos)
         {
             TreeAttribute tree = data as TreeAttribute;
             pos = tree?.GetBlockPos("pos");
             ITreeAttribute thermoInfo = tree?.GetTreeAttribute("thermoinfo");
 
             if (pos == null) return null;
-            Dictionary<string, MaterialStates> dGases = null;
+            Dictionary<string, MaterialStates> dFluids = null;
 
             if (thermoInfo != null)
             {
-                dGases = new Dictionary<string, MaterialStates>();
+                dFluids = new Dictionary<string, MaterialStates>();
 
-                foreach (var gas in thermoInfo)
+                foreach (var fluid in thermoInfo)
                 {
-                    MaterialStates? value = SerializerUtil.Deserialize<MaterialStates>(thermoInfo.GetBytes(gas.Key));
-                    if (value == null) continue;
+                    MaterialStates? value = SerializerUtil.Deserialize<MaterialStates>(thermoInfo.GetBytes(fluid.Key));
+                    if (value.GetValueOrDefault() == default(MaterialStates)) continue;
 
-                    dGases.Add(gas.Key, (MaterialStates)value);
+                    dFluids.Add(fluid.Key, value.Value);
                 }
             }
 
-            return dGases;
+            return dFluids;
         }
 
-        //Cleanly merges a gas into an already existing gas dictionary
-        public static void MergeGasIntoDict(string gasName, float gasValue, ref Dictionary<string, float> dest)
+        //Cleanly merges a fluid into an already existing fluid dictionary
+        public static void MergeFluidIntoDict(string fluidName, MaterialStates? fluidInfo, ref Dictionary<string, MaterialStates> dest)
         {
-            if (gasName == null || gasValue == 0 || dest == null) return;
+            if (fluidName == null || fluidInfo.GetValueOrDefault() == default || dest == null) return;
 
-            if (!dest.ContainsKey(gasName))
+            if (!dest.ContainsKey(fluidName))
             {
-                dest.Add(gasName, gasValue);
+                dest.Add(fluidName, fluidInfo);
             }
             else
             {
-                dest[gasName] += gasValue;
+                dest[fluidName] += fluidInfo;
             }
         }
 
-        //Cleanly merges two gas dictionaries together
+        //Cleanly merges two fluid dictionaries together
         public static void MergeGasDicts(Dictionary<string, float> source, ref Dictionary<string, float> dest)
         {
             if (source == null || dest == null) return;
@@ -202,7 +202,7 @@ namespace ThermodynamicApi.ApiHelper
                     if (!dest.ContainsKey(gas.Key)) dest.Add(gas.Key, gas.Value);
                     else if (dest[gas.Key] < gas.Value) dest[gas.Key] = gas.Value;
                 }
-                else MergeGasIntoDict(gas.Key, gas.Value, ref dest);
+                else MergeFluidIntoDict(gas.Key, gas.Value, ref dest);
             }
         }
 
@@ -210,7 +210,7 @@ namespace ThermodynamicApi.ApiHelper
         public float GetAirAmount(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return 1;
-            Dictionary<string, float> gasesHere = GetGases(pos);
+            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
 
             if (gasesHere == null) return 1;
 
@@ -234,7 +234,7 @@ namespace ThermodynamicApi.ApiHelper
         public float GetAcidity(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return 0;
-            Dictionary<string, float> gasesHere = GetGases(pos);
+            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
 
             if (gasesHere == null) return 0;
 
@@ -252,11 +252,11 @@ namespace ThermodynamicApi.ApiHelper
             return conc;
         }
 
-        //Returns whether there is a flammable amount of gas at this position
+        //Returns whether there is a flammable amount of fluid at this position
         public bool IsVolatile(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
-            Dictionary<string, float> gasesHere = GetGases(pos);
+            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
 
             if (gasesHere == null) return false;
 
@@ -271,11 +271,11 @@ namespace ThermodynamicApi.ApiHelper
             return false;
         }
 
-        //Returns whether there is enough explosive gas here to explode
+        //Returns whether there is enough explosive fluid here to explode
         public bool ShouldExplode(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
-            Dictionary<string, float> gasesHere = GetGases(pos);
+            Dictionary<string, float> gasesHere = GetThermodynamicInfo(pos);
 
             if (gasesHere == null) return false;
 
@@ -290,7 +290,7 @@ namespace ThermodynamicApi.ApiHelper
             return false;
         }
 
-        //Determines if there is enough of the gas to be toxic
+        //Determines if there is enough of the fluid to be toxic
         public bool IsToxic(string name, float amount)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return false;
@@ -300,7 +300,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Collects gases and voids them in the world and returns them as a table
-        //Note: Because this happens on the main thread and gas spreading happens on an off thread, it may be somewhat inaccurate
+        //Note: Because this happens on the main thread and fluid spreading happens on an off thread, it may be somewhat inaccurate
         public Dictionary<string, float> CollectGases(BlockPos pos, int radius, string[] gasFilter)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return null;
@@ -349,7 +349,7 @@ namespace ThermodynamicApi.ApiHelper
                 {
                     foreach (var gas in gasesHere)
                     {
-                        if (gasFilter.Contains(gas.Key)) MergeGasIntoDict(gas.Key, gas.Value, ref result);
+                        if (gasFilter.Contains(gas.Key)) MergeFluidIntoDict(gas.Key, gas.Value, ref result);
                     }
                 }
             }
@@ -393,7 +393,7 @@ namespace ThermodynamicApi.ApiHelper
                         {
                             foreach (var gas in gasesHere)
                             {
-                                if (gasFilter.Contains(gas.Key)) MergeGasIntoDict(gas.Key, gas.Value, ref result);
+                                if (gasFilter.Contains(gas.Key)) MergeFluidIntoDict(gas.Key, gas.Value, ref result);
                             }
                         }
                     }
@@ -413,10 +413,10 @@ namespace ThermodynamicApi.ApiHelper
             return result;
         }
 
-        //Returns the display name of the gas if it has one
+        //Returns the display name of the fluid if it has one
         public static string GetGasDisplayName(string gas)
         {
-            string results = Lang.GetIfExists("thermoapi:gas-" + gas);
+            string results = Lang.GetIfExists("thermoapi:fluid-" + gas);
 
             return results == null ? gas : results;
         }
@@ -440,7 +440,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
 
-        //Internal class used to get the gas information from the config.
+        //Internal class used to get the fluid information from the config.
         [JsonObject(MemberSerialization.OptIn)]
         public class GasInfoLite
         {
