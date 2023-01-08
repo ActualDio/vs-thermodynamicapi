@@ -17,14 +17,14 @@ namespace ThermodynamicApi.ThermoDynamics
     public struct MatterProperties
     {
         // Volume for a cube is assumed to be 1 cubic meter
-        public float? MolarDensity { get; set; } // in moles per cubic meter
-        public float? Pressure { get; set; } // in Pascals
-        public float? Temperature { get; set; } // in Kelvin
-        public EnumMatterState? State { get; set; } //Solid, Liquid and Gas
-        public MatterProperties(float? density = null,
-                                float? press = null,
-                                float? temp = null,
-                                EnumMatterState? state = null)
+        public float MolarDensity { get; set; } // in moles per cubic meter
+        public float Pressure { get; set; } // in Pascals
+        public float Temperature { get; set; } // in Kelvin
+        public EnumMatterState State { get; set; } //Solid, Liquid and Gas
+        public MatterProperties(float density = float.NaN,
+                                float press = float.NaN,
+                                float temp = float.NaN,
+                                EnumMatterState state = EnumMatterState.Plasma)
         {
             MolarDensity = density;
             Pressure = press;

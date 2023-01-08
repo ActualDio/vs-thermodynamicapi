@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using ThermodynamicApi.ApiHelper;
 using ThermodynamicApi.BlockBehavior;
@@ -14,7 +13,6 @@ using ThermodynamicApi.SystemControl;
 using ThermodynamicApi.ThermoDynamics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -32,8 +30,8 @@ namespace ThermodynamicApi
         public static object matterDynamicsLock = new object();
         public static object heatDynamicsLock = new object();
         public static object pressureDynamicsLock = new object();
-        private Dictionary<BlockPos, Dictionary<string, MatterProperties>> ExplosionQueue = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
-        private Dictionary<Vec2i, Dictionary<string, double>> PollutionPerChunk = new Dictionary<Vec2i, Dictionary<string, double>>();
+        //private Dictionary<BlockPos, Dictionary<string, MatterProperties>> ExplosionQueue = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
+        //private Dictionary<Vec2i, Dictionary<string, double>> PollutionPerChunk = new Dictionary<Vec2i, Dictionary<string, double>>();
         EntityPartitioning entityUtil;
 
         ICoreAPI api;
@@ -78,11 +76,10 @@ namespace ThermodynamicApi
         {
             this.api = api;
 
-            api.RegisterBlockBehaviorClass("Gas", typeof(BlockBehaviorMatter));
-            api.RegisterBlockBehaviorClass("SparkGas", typeof(BlockBehaviorSparkGas));
-            api.RegisterBlockBehaviorClass("MineGas", typeof(BlockBehaviorMineGas));
-            api.RegisterBlockBehaviorClass("ExplosionGas", typeof(BlockBehaviorExplosionGas));
-            api.RegisterBlockBehaviorClass("ConsumeGas", typeof(BlockBehaviorConsumeGas));
+            api.RegisterBlockBehaviorClass("Matter", typeof(BlockBehaviorMatter));
+            //api.RegisterBlockBehaviorClass("SparkGas", typeof(BlockBehaviorSparkGas));
+            //api.RegisterBlockBehaviorClass("MineGas", typeof(BlockBehaviorMineGas));
+            //api.RegisterBlockBehaviorClass("ExplosionGas", typeof(BlockBehaviorExplosionGas));
 
             api.RegisterBlockClass("BlockGas", typeof(BlockGas));
             api.RegisterBlockClass("BlockLiquid", typeof(BlockLiquid));
@@ -94,10 +91,14 @@ namespace ThermodynamicApi
             api.RegisterBlockEntityBehaviorClass("ProduceFluid", typeof(BlockEntityBehaviorProduceFluid));
             api.RegisterBlockEntityBehaviorClass("ConsumeFluid", typeof(BlockEntityBehaviorConsumeFluid));
 
-            IAsset asset = api.Assets.Get("thermoapi:config/gases.json");
-            GasDictionary = asset.ToObject<Dictionary<string, MatterInfo>>();
-            SolidDictionary = asset.ToObject<Dictionary<string, MatterInfo>>();
+            IAsset gases = api.Assets.Get("thermoapi:config/gases.json");
+            IAsset liquids = api.Assets.Get("thermoapi:config/liquids.json");
+            IAsset solids = api.Assets.Get("thermoapi:config/solids.json");
+            GasDictionary = gases.ToObject<Dictionary<string, MatterInfo>>();
+            LiquidDictionary = liquids.ToObject<Dictionary<string, MatterInfo>>();
+            SolidDictionary = solids.ToObject<Dictionary<string, MatterInfo>>();
             if (GasDictionary == null) GasDictionary = new Dictionary<string, MatterInfo>();
+            if (LiquidDictionary == null) LiquidDictionary = new Dictionary<string, MatterInfo>();
             if (SolidDictionary == null) SolidDictionary = new Dictionary<string, MatterInfo>();
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
 
@@ -405,7 +406,7 @@ namespace ThermodynamicApi
             Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return null;
 
-            int index3d = toLocalIndex(pos);
+            int index3d = ToLocalIndex(pos);
             if (!matterOfChunk.ContainsKey(index3d)) return null;
 
             return matterOfChunk[index3d];
@@ -425,7 +426,7 @@ namespace ThermodynamicApi
             Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return null;
 
-            int index3d = toLocalIndex(pos);
+            int index3d = ToLocalIndex(pos);
             if (!matterOfChunk.ContainsKey(index3d) || matterOfChunk[index3d] == null) return null;
 
             Dictionary<string, MatterProperties> result = new Dictionary<string, MatterProperties>(matterOfChunk[index3d]);
@@ -443,7 +444,7 @@ namespace ThermodynamicApi
             Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return;
 
-            int index3d = toLocalIndex(pos);
+            int index3d = ToLocalIndex(pos);
             if (!matterOfChunk.ContainsKey(index3d))
             {
                 matterOfChunk.Add(index3d, matterputhere);
@@ -464,9 +465,9 @@ namespace ThermodynamicApi
 
             foreach (var matter in matterHere)
             {
-                if (GasDictionary.ContainsKey(matter.Key) && matter.Value != default && matter.Value.MolarDensity.HasValue)
+                if (GasDictionary.ContainsKey(matter.Key) && matter.Value != default && matter.Value.MolarDensity != float.NaN)
                 {
-                    if (GasDictionary[matter.Key] != null) mass += matter.Value.MolarDensity.Value * GasDictionary[matter.Key].MolarMass;
+                    if (GasDictionary[matter.Key] != null) mass += matter.Value.MolarDensity * GasDictionary[matter.Key].MolarMass;
                 }
             }
             return mass;
@@ -480,11 +481,11 @@ namespace ThermodynamicApi
 
             float conc = 0;
 
-            foreach (var gas in gasesHere)
+            foreach (var matter in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(matter.Key))
                 {
-                    if (GasDictionary[gas.Key] != null && GasDictionary[gas.Key].Acidic) conc += gas.Value;
+                    if (GasDictionary[matter.Key] != null && GasDictionary[matter.Key].Acidic) conc += matter.Value;
                     if (conc >= 1) return 1;
                 }
             }
@@ -498,11 +499,11 @@ namespace ThermodynamicApi
 
             if (gasesHere == null) return false;
 
-            foreach (var gas in gasesHere)
+            foreach (var matter in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(matter.Key))
                 {
-                    if (GasDictionary[gas.Key].FlammableAmount > 0 && gas.Value >= GasDictionary[gas.Key].FlammableAmount) return true;
+                    if (GasDictionary[matter.Key].FlammableAmount > 0 && matter.Value >= GasDictionary[matter.Key].FlammableAmount) return true;
                 }
             }
 
@@ -515,11 +516,11 @@ namespace ThermodynamicApi
 
             if (gasesHere == null) return false;
 
-            foreach (var gas in gasesHere)
+            foreach (var matter in gasesHere)
             {
-                if (GasDictionary.ContainsKey(gas.Key))
+                if (GasDictionary.ContainsKey(matter.Key))
                 {
-                    if (GasDictionary[gas.Key].ExplosionAmount <= gas.Value) return true;
+                    if (GasDictionary[matter.Key].ExplosionAmount <= matter.Value) return true;
                 }
             }
 
@@ -573,30 +574,30 @@ namespace ThermodynamicApi
             ExplosionQueue[pos] = dest;
         }*/
 
-        /*public void AddPollution(BlockPos pos, string gas, float value)
+        /*public void AddPollution(BlockPos pos, string matter, float value)
         {
-            if (pos == null || gas == null || value == 0) return;
+            if (pos == null || matter == null || value == 0) return;
 
             Vec2i columm = new Vec2i(pos.X / api.World.BlockAccessor.ChunkSize, pos.Z / api.World.BlockAccessor.ChunkSize);
 
             if (!PollutionPerChunk.ContainsKey(columm))
             {
                 PollutionPerChunk.Add(columm, new Dictionary<string, double>());
-                PollutionPerChunk[columm].Add(gas, value);
+                PollutionPerChunk[columm].Add(matter, value);
             }
             else
             {
-                if (!PollutionPerChunk[columm].ContainsKey(gas))
+                if (!PollutionPerChunk[columm].ContainsKey(matter))
                 {
-                    PollutionPerChunk[columm].Add(gas, value);
+                    PollutionPerChunk[columm].Add(matter, value);
                 }
                 else
                 {
-                    PollutionPerChunk[columm][gas] += value;
+                    PollutionPerChunk[columm][matter] += value;
                 }
             }
 
-            if (PollutionPerChunk[columm][gas] < 0) PollutionPerChunk[columm][gas] = 0;
+            if (PollutionPerChunk[columm][matter] < 0) PollutionPerChunk[columm][matter] = 0;
         }*/
 
         public void QueueMatterChange(Dictionary<string, MatterProperties> change, BlockPos pos)
@@ -604,27 +605,66 @@ namespace ThermodynamicApi
             if (change == null) change = new Dictionary<string, MatterProperties>();
 
             BlockPos temp = pos.Copy();
-
+            MatterProperties tmp; 
             lock (matterDynamicsLock)
             {
                 if (!matterDynamicsQueue.ContainsKey(temp)) matterDynamicsQueue.Add(temp, change);
                 else
                 {
-                    foreach (var gas in change)
+                    foreach (var matter in change)
                     {
-                        if (!spreadGasQueue[temp].ContainsKey(gas.Key)) spreadGasQueue[temp].Add(gas.Key, gas.Value);
-                        else spreadGasQueue[temp][gas.Key] += gas.Value;
+                        if (!matterDynamicsQueue[temp].ContainsKey(matter.Key)) matterDynamicsQueue[temp].Add(matter.Key, matter.Value);
+                        else
+                        {
+                            tmp = matterDynamicsQueue[temp][matter.Key];
+                            tmp.MolarDensity =+ matter.Value.MolarDensity;
+                            matterDynamicsQueue[temp][matter.Key] = tmp;
+                        }
+                    }
+                }
+            }
+            lock (heatDynamicsLock)
+            {
+                if (!heatDynamicsQueue.ContainsKey(temp)) heatDynamicsQueue.Add(temp, change);
+                else
+                {
+                    foreach (var matter in change)
+                    {
+                        if (!heatDynamicsQueue[temp].ContainsKey(matter.Key)) heatDynamicsQueue[temp].Add(matter.Key, matter.Value);
+                        else
+                        {
+                            tmp = heatDynamicsQueue[temp][matter.Key];
+                            tmp.Temperature =+ matter.Value.Temperature;
+                            heatDynamicsQueue[temp][matter.Key] = tmp;
+                        }
+                    }
+                }
+            }
+            lock (pressureDynamicsLock)
+            {
+                if (!pressureDynamicsQueue.ContainsKey(temp)) pressureDynamicsQueue.Add(temp, change);
+                else
+                {
+                    foreach (var matter in change)
+                    {
+                        if (!pressureDynamicsQueue[temp].ContainsKey(matter.Key)) pressureDynamicsQueue[temp].Add(matter.Key, matter.Value);
+                        else
+                        {
+                            tmp = pressureDynamicsQueue[temp][matter.Key];
+                            tmp.Pressure =+ matter.Value.Pressure;
+                            pressureDynamicsQueue[temp][matter.Key] = tmp;
+                        }
                     }
                 }
             }
         }
 
-        static int toLocalIndex(BlockPos pos)
+        static int ToLocalIndex(BlockPos pos)
         {
             return MapUtil.Index3d(pos.X % 32, pos.Y % 32, pos.Z % 32, 32, 32);
         }
 
-        bool findPosInLayers(BlockPos pos, HashSet<BlockPos>[] layers)
+        bool FindPosInLayers(BlockPos pos, HashSet<BlockPos>[] layers)
         {
             for (int i = 0; i < layers.Length; i++)
             {
@@ -634,7 +674,7 @@ namespace ThermodynamicApi
             return false;
         }
 
-        int getBlockInRadius(int radius)
+        int GetBlockInRadius(int radius)
         {
             Vec4i[] comp = new Vec4i[] { new Vec4i(1, 0, 0, 1), new Vec4i(-1, 0, 0, 1), new Vec4i(0, -1, 0, 1), new Vec4i(0, 1, 0, 1), new Vec4i(0, 0, 1, 1), new Vec4i(0, 0, -1, 1) };
 
@@ -663,11 +703,11 @@ namespace ThermodynamicApi
         }
         class ThermodynamicThread
         {
-            int gasSpreadTick = 10;
+            readonly int thermoTick = 50;
             IBlockAccessor blockAccessor;
-            ICoreServerAPI sapi;
-            Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkSpread;
-            ThermodynamicSystem gasSys;
+            readonly ICoreServerAPI sapi;
+            Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkMatter;
+            readonly ThermodynamicSystem thermoSys;
 
             public bool Stopping { get; set; }
             public bool Paused { get; set; }
@@ -675,12 +715,12 @@ namespace ThermodynamicApi
             public ThermodynamicThread(ICoreServerAPI sapi, ThermodynamicSystem gassys)
             {
                 this.sapi = sapi;
-                this.gasSys = gassys;
+                thermoSys = gassys;
             }
 
-            public void Start(Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkSpread)
+            public void Start(Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkMatter)
             {
-                this.checkSpread = checkSpread;
+                this.checkMatter = checkMatter;
 
                 Thread thread = new Thread(() =>
                 {
@@ -689,32 +729,18 @@ namespace ThermodynamicApi
                         if (!Paused && ThermodynamicConfig.Loaded.GasesEnabled)
                         {
                             blockAccessor = sapi.World.BlockAccessor;
-                            for (int i = 0; i < 100; i++)
+                            lock (matterDynamicsLock)
                             {
-                                if (checkSpread.Count <= 0) break;
-
-                                BlockPos current = null;
-                                Dictionary<string, float> gases = null;
-
-                                lock (spreadFluidLock)
+                                foreach (var block in checkMatter)
                                 {
-                                    try
-                                    {
-                                        current = checkSpread.Keys.First();
-                                        gases = checkSpread[current];
-                                        checkSpread.Remove(current);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        Stopping = true;
-                                    }
+                                    if (block.Key == null || block.Value == null) continue;
+                                    BlockPos current = block.Key;
+                                    Dictionary<string, MatterProperties> matter = block.Value;
+                                    checkMatter.Remove(current);
+                                    AddAndDistributeMatter(matter, current);
                                 }
-
-                                if (Stopping) break;
-                                AddAndDistributeGas(gases, current);
                             }
-
-                            Thread.Sleep(gasSpreadTick);
+                            Thread.Sleep(thermoTick);
                         }
                     }
                 });
@@ -724,20 +750,11 @@ namespace ThermodynamicApi
                 thread.Start();
             }
 
-            public void AddAndDistributeGas(Dictionary<string, float> adds, BlockPos pos)
+            public void AddAndDistributeMatter(Dictionary<string, MatterProperties> adds, BlockPos pos)
             {
                 if (pos.Y < 1 || pos.Y > blockAccessor.MapSizeY) return;
 
-                Dictionary<string, float> collectedGases = adds ?? new Dictionary<string, float>();
-                bool combusted = collectedGases.ContainsKey("THISISANEXPLOSION"), ignoreLiquid = collectedGases.ContainsKey("IGNORELIQUIDS"), ignoreCheck = collectedGases.ContainsKey("IGNORESOLIDCHECK");
-                float plantNear = collectedGases.ContainsKey("THISISAPLANT") ? collectedGases["THISISAPLANT"] : 0;
-                collectedGases.Remove("THISISANEXPLOSION");
-                collectedGases.Remove("THISISAPLANT");
-                collectedGases.Remove("IGNORELIQUIDS");
-                collectedGases.Remove("IGNORESOLIDCHECK");
-                int radius = ThermodynamicConfig.Loaded.DefaultSpreadRadius;
-                if (collectedGases.ContainsKey("RADIUS")) { radius = (int)collectedGases["RADIUS"]; collectedGases.Remove("RADIUS"); }
-                if (radius < 1) radius = 0;
+                Dictionary<string, MatterProperties> collectedMatter = adds ?? new Dictionary<string, MatterProperties>();
                 Queue<Vec3i> checkQueue = new Queue<Vec3i>();
                 List<MaterialsChunk> chunks = new List<MaterialsChunk>();
                 Cuboidi bounds = new Cuboidi(pos.X - radius, pos.Y - radius, pos.Z - radius, pos.X + radius, pos.Y + radius, pos.Z + radius);
@@ -788,7 +805,7 @@ namespace ThermodynamicApi
 
                 if (originChunk == null) return;
 
-                originChunk.TakeGas(ref collectedGases, toLocalIndex(pos));
+                originChunk.TakeGas(ref collectedMatter, ToLocalIndex(pos));
 
                 BlockFacing[] faces = BlockFacing.ALLFACES;
                 BlockPos curPos = new BlockPos();
@@ -810,9 +827,9 @@ namespace ThermodynamicApi
                         }
                     }
 
-                    if (!blocks.ContainsKey(parentChunk.Chunk.Unpack_AndReadBlock(toLocalIndex(bpos.AsBlockPos)))) continue;
+                    if (!blocks.ContainsKey(parentChunk.Chunk.Unpack_AndReadBlock(ToLocalIndex(bpos.AsBlockPos)))) continue;
 
-                    parent = blocks[parentChunk.Chunk.Unpack_AndReadBlock(toLocalIndex(bpos.AsBlockPos))];
+                    parent = blocks[parentChunk.Chunk.Unpack_AndReadBlock(ToLocalIndex(bpos.AsBlockPos))];
 
                     //Process Children
                     foreach (BlockFacing facing in faces)
@@ -824,7 +841,7 @@ namespace ThermodynamicApi
                         if (curPos.Y < 0 || curPos.Y > blockAccessor.MapSizeY) continue;
 
                         MaterialsChunk localArea = null;
-                        int chunkBid = toLocalIndex(curPos);
+                        int chunkBid = ToLocalIndex(curPos);
                         Block atPos = null;
 
                         foreach (MaterialsChunk chunk in chunks)
@@ -838,7 +855,7 @@ namespace ThermodynamicApi
 
                         if (localArea == null) continue;
 
-                        int blockId = localArea.Chunk.Unpack_AndReadBlock(toLocalIndex(curPos));
+                        int blockId = localArea.Chunk.Unpack_AndReadBlock(ToLocalIndex(curPos));
 
                         if (!blocks.TryGetValue(blockId, out atPos)) atPos = blocks[blockId] = blockAccessor.GetBlock(blockId);
 
@@ -863,12 +880,12 @@ namespace ThermodynamicApi
                 }
 
                 //Finished getting positions, now deal with gases
-                Dictionary<string, float> modifier = new Dictionary<string, float>(collectedGases);
+                Dictionary<string, float> modifier = new Dictionary<string, float>(collectedMatter);
 
                 //Convert gases to their burned state, if this is an explosion
                 if (combusted)
                 {
-                    foreach (var gas in collectedGases)
+                    foreach (var gas in collectedMatter)
                     {
                         if (GasDictionary.ContainsKey(gas.Key) && (GasDictionary[gas.Key].FlammableAmount <= 1 || GasDictionary[gas.Key].ExplosionAmount <= 1))
                         {
@@ -878,11 +895,11 @@ namespace ThermodynamicApi
                         }
                     }
 
-                    collectedGases = new Dictionary<string, float>(modifier);
+                    collectedMatter = new Dictionary<string, float>(modifier);
                 }
 
                 //Spread gases
-                foreach (var gas in collectedGases)
+                foreach (var gas in collectedMatter)
                 {
                     bool light = false;
                     bool plant = false;
@@ -908,7 +925,7 @@ namespace ThermodynamicApi
 
                     if (openAir && windspeed >= wind)
                     {
-                        gasSys.AddPollution(pos, gas.Key, gas.Value);
+                        thermoSys.AddPollution(pos, gas.Key, gas.Value);
 
                         continue;
                     }
@@ -936,7 +953,7 @@ namespace ThermodynamicApi
                                     }
                                 }
 
-                                localArea.SetGas(gas.Key, giveaway, toLocalIndex(pil));
+                                localArea.SetGas(gas.Key, giveaway, ToLocalIndex(pil));
                             }
                         }
                     }
@@ -964,7 +981,7 @@ namespace ThermodynamicApi
                                     }
                                 }
 
-                                localArea.SetGas(gas.Key, giveaway, toLocalIndex(pil));
+                                localArea.SetGas(gas.Key, giveaway, ToLocalIndex(pil));
                             }
 
                             modifier[gas.Key] -= layers[i].Count;
@@ -996,7 +1013,7 @@ namespace ThermodynamicApi
                                     }
                                 }
 
-                                localArea.SetGas(gas.Key, giveaway, toLocalIndex(pil));
+                                localArea.SetGas(gas.Key, giveaway, ToLocalIndex(pil));
                             }
 
                             modifier[gas.Key] -= layers[i].Count;
