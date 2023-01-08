@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Vintagestory.API.Common;
 
 namespace ThermodynamicApi.ThermoDynamics
 {
@@ -19,18 +20,19 @@ namespace ThermodynamicApi.ThermoDynamics
         public float? MolarDensity { get; set; } // in moles per cubic meter
         public float? Pressure { get; set; } // in Pascals
         public float? Temperature { get; set; } // in Kelvin
-        public MatterProperties(float? density = null, float? press = null, float? temp = null)
+        public EnumMatterState? State { get; set; } //Solid, Liquid and Gas
+        public MatterProperties(float? density = null, float? press = null, float? temp = null, EnumMatterState? state = null)
         {
             MolarDensity = density;
             Pressure = press;
             Temperature = temp;
-            if (density == null && press == null && temp == null);
+            State = state;
         }
         public static bool operator ==(MatterProperties a, MatterProperties b)
         {
             if (a == null && b == null) return true;
             if (a == null || b == null) return false;
-            return (a.MolarDensity == b.MolarDensity && a.Temperature == b.Temperature && a.Pressure == b.Pressure);
+            return (a.MolarDensity == b.MolarDensity && a.Temperature == b.Temperature && a.Pressure == b.Pressure && a.State == b.State);
         }
         public static bool operator !=(MatterProperties a, MatterProperties b)
         {
@@ -40,7 +42,8 @@ namespace ThermodynamicApi.ThermoDynamics
         {
             if (a == default) return b;
             if (b == default) return a;
-            a.Pressure =+ b.Pressure; a.Temperature =+ b.Temperature; a.MolarDensity = +b.MolarDensity;
+            if (a.State != b.State) return default;
+            a.Pressure =+ b.Pressure; a.Temperature =+ b.Temperature; a.MolarDensity =+ b.MolarDensity;
             return a;
         }
         public override bool Equals(object obj)

@@ -427,40 +427,37 @@ namespace ThermodynamicApi
             int index3d = toLocalIndex(pos);
             if (!matterOfChunk.ContainsKey(index3d) || matterOfChunk[index3d] == null) return null;
 
-            Dictionary<string, float> result = new Dictionary<string, float>(matterOfChunk[index3d]);
+            Dictionary<string, MatterProperties> result = new Dictionary<string, MatterProperties>(matterOfChunk[index3d]);
 
             if (matterOfChunk.Remove(index3d))
             {
-                saveGases(matterOfChunk, pos);
+                SaveThermodynamicData(matterOfChunk, pos);
                 return result;
             }
-
             return null;
         }
 
-        public void SetFluids(BlockPos pos, Dictionary<string, MatterProperties> fluidputhere)
+        public void SetMatter(BlockPos pos, Dictionary<string, MatterProperties> matterputhere)
         {
-            Dictionary<int, Dictionary<string, float>> gasesOfChunk = GetOrCreateMatterAt(pos);
-            if (gasesOfChunk == null) return;
+            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
+            if (matterOfChunk == null) return;
 
             int index3d = toLocalIndex(pos);
-            if (!gasesOfChunk.ContainsKey(index3d))
+            if (!matterOfChunk.ContainsKey(index3d))
             {
-                gasesOfChunk.Add(index3d, fluidputhere);
+                matterOfChunk.Add(index3d, matterputhere);
             }
             else
             {
-                gasesOfChunk[index3d] = fluidputhere;
+                matterOfChunk[index3d] = matterputhere;
             }
 
-
-
-            saveGases(gasesOfChunk, pos);
+            SaveThermodynamicData(matterOfChunk, pos);
         }
 
-        public float GetAirAmount(BlockPos pos)
+        public MatterProperties GetGasProperties(BlockPos pos)
         {
-            Dictionary<string, float> gasesHere = GetMatter(pos);
+            Dictionary<string, MatterProperties> gasesHere = GetMatter(pos);
 
             if (gasesHere == null) return 1;
 
