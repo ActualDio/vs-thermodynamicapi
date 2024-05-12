@@ -2,7 +2,7 @@
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Client;
 
-namespace ThermodynamicApi
+namespace ThermalDynamics
 {
     public class HudElementAirBar : HudElement
     {

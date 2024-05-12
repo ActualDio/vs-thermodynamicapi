@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>gasapi</RootNamespace>
     <AssemblyName>gasapi</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -32,13 +32,22 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.0.4.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Rimworld Modding\Harmony.2.2.2.0\net472\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>packages\protobuf-net.3.1.26\lib\net462\protobuf-net.dll</HintPath>
+      <HintPath>packages\protobuf-net.3.2.26\lib\netstandard2.0\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>packages\protobuf-net.Core.3.2.26\lib\netstandard2.0\protobuf-net.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -93,9 +102,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="modinfo.json" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="src\BlockBehavior\BlockBehaviorProduceGas.cs" />
     <Compile Include="src\BlockBehavior\BlockBehaviorConsumeGas.cs" />
     <Compile Include="src\BlockEntityBehaviour\BlockEntityBehaviorConsumeFluid.cs" />
@@ -106,19 +112,22 @@
     <Compile Include="src\BlockBehavior\BlockBehaviorMatter.cs" />
     <Compile Include="src\Blocks\BlockGas.cs" />
     <Compile Include="src\Blocks\BlockLiquid.cs" />
+    <Compile Include="src\Blocks\BlockMixture.cs" />
     <Compile Include="src\Blocks\BlockSolid.cs" />
     <Compile Include="src\EntityBehavior\EntityBehaviorAir.cs" />
     <Compile Include="src\SystemControl\EnumThermoThreadPass.cs" />
-    <Compile Include="src\ThermodynamicConfig.cs" />
+    <Compile Include="src\SystemControl\FluidSolver.cs" />
+    <Compile Include="src\ThermalDynamicsConfig.cs" />
+    <Compile Include="src\ThermalDynamicsSystem.cs" />
     <Compile Include="src\SystemControl\ChunkThermoData.cs" />
     <Compile Include="src\EntityBehavior\EntityBehaviorGas.cs" />
     <Compile Include="src\SystemControl\MaterialsChunk.cs" />
     <Compile Include="src\For Other Mods\ThermodynamicHelper.cs" />
     <Compile Include="src\ThermoDynamics\MatterInfo.cs" />
-    <Compile Include="src\ThermodynamicSystem.cs" />
     <Compile Include="src\GUI\HudElementAirBar.cs" />
     <Compile Include="src\SystemControl\Patches.cs" />
-    <Compile Include="src\ThermoDynamics\ThermodynMath.cs" />
+    <Compile Include="src\ThermoDynamics\MeasurementUnits.cs" />
+    <Compile Include="src\ThermoDynamics\ThermodynamicsMath.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="assets\" />
@@ -126,6 +135,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="src\modinfo.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

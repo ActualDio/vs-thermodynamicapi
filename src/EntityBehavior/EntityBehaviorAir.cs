@@ -7,12 +7,12 @@ using System;
 using Vintagestory.API.Config;
 using System.Linq;
 
-namespace ThermodynamicApi.EntityBehavior
+namespace ThermalDynamics.EntityBehavior
 {
     public class EntityBehaviorAir : Vintagestory.API.Common.Entities.EntityBehavior
     {
         ITreeAttribute airTree;
-        ThermodynamicSystem atmosphere;
+        ThermalDynamicsSystem atmosphere;
 
         public bool waterBreather = false;
         float damageOn = 0;
@@ -57,7 +57,7 @@ namespace ThermodynamicApi.EntityBehavior
 
         public override void Initialize(EntityProperties properties, JsonObject typeAttributes)
         {
-            atmosphere = entity.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            atmosphere = entity.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
             timer = entity.World.Calendar.TotalHours;
             waterBreather = typeAttributes.IsTrue("waterBreather");
             airTree = entity.WatchedAttributes.GetTreeAttribute("air");
@@ -102,10 +102,10 @@ namespace ThermodynamicApi.EntityBehavior
 
             UpdateMaxAir();
 
-            if (ThermodynamicConfig.Loaded.ToxicEffects) HandleEffects(deltaTime);
+            if (ThermalDynamicsConfig.Loaded.ToxicEffects) HandleEffects(deltaTime);
 
             //Exhaling
-            if (ThermodynamicConfig.Loaded.Exhaling && entity.World.Calendar.TotalHours - timer >= 10)
+            if (ThermalDynamicsConfig.Loaded.Exhaling && entity.World.Calendar.TotalHours - timer >= 10)
             {
                 timer = entity.World.Calendar.TotalHours;
 
@@ -198,11 +198,11 @@ namespace ThermodynamicApi.EntityBehavior
 
         private void RemoveEffect(string name)
         {
-            if (ThermodynamicSystem.GasDictionary != null && ThermodynamicSystem.GasDictionary.ContainsKey(name))
+            if (ThermalDynamicsSystem.GasDictionary != null && ThermalDynamicsSystem.GasDictionary.ContainsKey(name))
             {
-                if (ThermodynamicSystem.GasDictionary[name].Effects != null && ThermodynamicSystem.GasDictionary[name].Effects.Count > 0)
+                if (ThermalDynamicsSystem.GasDictionary[name].Effects != null && ThermalDynamicsSystem.GasDictionary[name].Effects.Count > 0)
                 {
-                    foreach (var effect in ThermodynamicSystem.GasDictionary[name].Effects)
+                    foreach (var effect in ThermalDynamicsSystem.GasDictionary[name].Effects)
                     {
                         entity.Stats.Remove(effect.Key, "gaseffect-" + name);
                     }
@@ -212,11 +212,11 @@ namespace ThermodynamicApi.EntityBehavior
 
         private void SetEffect(string name, float conc)
         {
-            if (ThermodynamicSystem.GasDictionary != null && ThermodynamicSystem.GasDictionary.ContainsKey(name))
+            if (ThermalDynamicsSystem.GasDictionary != null && ThermalDynamicsSystem.GasDictionary.ContainsKey(name))
             {
-                if (ThermodynamicSystem.GasDictionary[name].Effects != null && ThermodynamicSystem.GasDictionary[name].Effects.Count > 0)
+                if (ThermalDynamicsSystem.GasDictionary[name].Effects != null && ThermalDynamicsSystem.GasDictionary[name].Effects.Count > 0)
                 {
-                    foreach (var effect in ThermodynamicSystem.GasDictionary[name].Effects)
+                    foreach (var effect in ThermalDynamicsSystem.GasDictionary[name].Effects)
                     {
                         //System.Diagnostics.Debug.WriteLine(effect.Value * conc);
                         entity.Stats.Set(effect.Key, "gaseffect-" + name, effect.Value * conc, true);
@@ -283,7 +283,7 @@ namespace ThermodynamicApi.EntityBehavior
 
             if (mask == null || mask.Collectible.GetDurability(mask) <= 0 || mask.ItemAttributes == null) return false;
 
-            if (ThermodynamicConfig.Loaded.AllowScuba && mask.ItemAttributes.IsTrue("gassysScubaMask"))
+            if (ThermalDynamicsConfig.Loaded.AllowScuba && mask.ItemAttributes.IsTrue("gassysScubaMask"))
             {
                 IInventory backpacks = inv.GetOwnInventory(GlobalConstants.backpackInvClassName);
                 if (backpacks != null && backpacks.Count >= 6)
@@ -296,7 +296,7 @@ namespace ThermodynamicApi.EntityBehavior
                 }
             }
 
-            if (ThermodynamicConfig.Loaded.AllowMasks)
+            if (ThermalDynamicsConfig.Loaded.AllowMasks)
             {
                 string[] gasProt = mask.ItemAttributes["gassysGasMaskProtection"].AsArray<string>();
 
@@ -311,7 +311,7 @@ namespace ThermodynamicApi.EntityBehavior
 
         private bool HasScubaSet()
         {
-            if (!ThermodynamicConfig.Loaded.AllowScuba || !(entity is EntityPlayer)) return false;
+            if (!ThermalDynamicsConfig.Loaded.AllowScuba || !(entity is EntityPlayer)) return false;
 
             IPlayerInventoryManager inv = (entity as EntityPlayer)?.Player.InventoryManager;
             ItemStack mask = inv.GetOwnInventory(GlobalConstants.characterInvClassName)?[(int)EnumCharacterDressType.Face].Itemstack;

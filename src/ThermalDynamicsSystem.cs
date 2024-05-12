@@ -4,13 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using ThermodynamicApi.ApiHelper;
-using ThermodynamicApi.BlockBehavior;
-using ThermodynamicApi.BlockEntityBehaviour;
-using ThermodynamicApi.Blocks;
-using ThermodynamicApi.EntityBehavior;
-using ThermodynamicApi.SystemControl;
-using ThermodynamicApi.ThermoDynamics;
+using ThermalDynamics.ApiHelper;
+using ThermalDynamics.BlockBehavior;
+using ThermalDynamics.BlockEntityBehaviour;
+using ThermalDynamics.Blocks;
+using ThermalDynamics.EntityBehavior;
+using ThermalDynamics.SystemControl;
+using ThermalDynamics.Thermodynamics;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -19,14 +19,14 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-namespace ThermodynamicApi
+namespace ThermalDynamics
 {
-    public class ThermodynamicSystem : ModSystem
+    public class ThermalDynamicsSystem : ModSystem
     {
         private ICoreServerAPI sapi;
-        private Dictionary<BlockPos, Dictionary<string, MatterProperties>> matterDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
-        private Dictionary<BlockPos, Dictionary<string, MatterProperties>> heatDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
-        private Dictionary<BlockPos, Dictionary<string, MatterProperties>> pressureDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialProperties>> matterDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialProperties>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialProperties>> heatDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialProperties>>();
+        private Dictionary<BlockPos, Dictionary<string, MaterialProperties>> pressureDynamicsQueue = new Dictionary<BlockPos, Dictionary<string, MaterialProperties>>();
         public static object matterDynamicsLock = new object();
         public static object heatDynamicsLock = new object();
         public static object pressureDynamicsLock = new object();
@@ -39,9 +39,7 @@ namespace ThermodynamicApi
         IClientNetworkChannel clientChannel;
         static IServerNetworkChannel serverChannel;
 
-        public static Dictionary<string, MatterInfo> GasDictionary;
-        public static Dictionary<string, MatterInfo> LiquidDictionary;
-        public static Dictionary<string, MatterInfo> SolidDictionary;
+        public static Dictionary<string, MatterInfo> MatterDictionary;
 
         private ThermodynamicThread thermoThread;
         private Harmony harmony;
@@ -57,19 +55,19 @@ namespace ThermodynamicApi
 
             try
             {
-                ThermodynamicConfig FromDisk;
-                if ((FromDisk = api.LoadModConfig<ThermodynamicConfig>("ThermodynamicConfig.json")) == null)
+                ThermalDynamicsConfig FromDisk;
+                if ((FromDisk = api.LoadModConfig<ThermalDynamicsConfig>("ThermodynamicConfig.json")) == null)
                 {
-                    api.StoreModConfig<ThermodynamicConfig>(ThermodynamicConfig.Loaded, "ThermodynamicConfig.json");
+                    api.StoreModConfig<ThermalDynamicsConfig>(ThermalDynamicsConfig.Loaded, "ThermodynamicConfig.json");
                 }
-                else ThermodynamicConfig.Loaded = FromDisk;
+                else ThermalDynamicsConfig.Loaded = FromDisk;
             }
             catch
             {
-                api.StoreModConfig<ThermodynamicConfig>(ThermodynamicConfig.Loaded, "ThermodynamicConfig.json");
+                api.StoreModConfig<ThermalDynamicsConfig>(ThermalDynamicsConfig.Loaded, "ThermodynamicConfig.json");
             }
 
-            api.World.Config.SetBool("GAgasesEnabled", ThermodynamicConfig.Loaded.GasesEnabled);
+            api.World.Config.SetBool("GAgasesEnabled", ThermalDynamicsConfig.Loaded.GasesEnabled);
         }
 
         public override void Start(ICoreAPI api)
@@ -83,6 +81,7 @@ namespace ThermodynamicApi
 
             api.RegisterBlockClass("BlockGas", typeof(BlockGas));
             api.RegisterBlockClass("BlockLiquid", typeof(BlockLiquid));
+            api.RegisterBlockClass("BlockMixture", typeof(BlockMixture));
             api.RegisterBlockClass("BlockSolid", typeof(BlockGas));
 
             api.RegisterEntityBehaviorClass("gasinteract", typeof(EntityBehaviorGas));
@@ -91,15 +90,9 @@ namespace ThermodynamicApi
             api.RegisterBlockEntityBehaviorClass("ProduceFluid", typeof(BlockEntityBehaviorProduceFluid));
             api.RegisterBlockEntityBehaviorClass("ConsumeFluid", typeof(BlockEntityBehaviorConsumeFluid));
 
-            IAsset gases = api.Assets.Get("thermoapi:config/gases.json");
-            IAsset liquids = api.Assets.Get("thermoapi:config/liquids.json");
-            IAsset solids = api.Assets.Get("thermoapi:config/solids.json");
-            GasDictionary = gases.ToObject<Dictionary<string, MatterInfo>>();
-            LiquidDictionary = liquids.ToObject<Dictionary<string, MatterInfo>>();
-            SolidDictionary = solids.ToObject<Dictionary<string, MatterInfo>>();
-            if (GasDictionary == null) GasDictionary = new Dictionary<string, MatterInfo>();
-            if (LiquidDictionary == null) LiquidDictionary = new Dictionary<string, MatterInfo>();
-            if (SolidDictionary == null) SolidDictionary = new Dictionary<string, MatterInfo>();
+            IAsset matter = api.Assets.Get("thermoapi:config/materials.json");
+            MatterDictionary = matter.ToObject<Dictionary<string, MatterInfo>>();
+            if (MatterDictionary == null) MatterDictionary = new Dictionary<string, MatterInfo>();
             entityUtil = api.ModLoader.GetModSystem<EntityPartitioning>();
 
             harmony = new Harmony("com.actualdio.thermoapi.thermodynamicapi");
@@ -116,7 +109,7 @@ namespace ThermodynamicApi
         {
             base.StartClientSide(api);
 
-            if (ThermodynamicConfig.Loaded.PlayerBreathingEnabled)
+            if (ThermalDynamicsConfig.Loaded.PlayerBreathingEnabled)
             {
                 HudElementAirBar airBar = new HudElementAirBar(api);
                 airBar.TryOpen();
@@ -224,7 +217,7 @@ namespace ThermodynamicApi
                 {
                     lock (matterDynamicsLock)
                     {
-                        Dictionary<BlockPos, Dictionary<string, MatterProperties>> backup = new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
+                        Dictionary<BlockPos, Dictionary<string, MaterialProperties>> backup = new Dictionary<BlockPos, Dictionary<string, MaterialProperties>>();
 
                         foreach (var pos in matterDynamicsQueue)
                         {
@@ -243,7 +236,7 @@ namespace ThermodynamicApi
         {
             if (eventName != "matterChange" || data == null) return;
 
-            Dictionary<string, MatterProperties> fluids = ThermodynamicHelper.DeserializeThermoTreeData(data, out BlockPos spreadPos);
+            Dictionary<string, MaterialProperties> fluids = ThermodynamicHelper.DeserializeThermoTreeData(data, out BlockPos spreadPos);
 
             if (spreadPos == null) return;
 
@@ -276,21 +269,21 @@ namespace ThermodynamicApi
             }
         }
 
-        private Dictionary<BlockPos, Dictionary<string, MatterProperties>> DeserializeQueue(string name)
+        private Dictionary<BlockPos, Dictionary<string, MaterialProperties>> DeserializeQueue(string name)
         {
             try
             {
                 byte[] data = sapi.WorldManager.SaveGame.GetData(name);
                 if (data != null)
                 {
-                    return SerializerUtil.Deserialize<Dictionary<BlockPos, Dictionary<string, MatterProperties>>>(data);
+                    return SerializerUtil.Deserialize<Dictionary<BlockPos, Dictionary<string, MaterialProperties>>>(data);
                 }
             }
             catch (Exception e)
             {
                 sapi.World.Logger.Error("Failed loading Queue.{0}. Resetting. Exception: {1}", name, e);
             }
-            return new Dictionary<BlockPos, Dictionary<string, MatterProperties>>();
+            return new Dictionary<BlockPos, Dictionary<string, MaterialProperties>>();
         }
 
         /*private Dictionary<Vec2i, Dictionary<string, double>> deserializePollution(string name)
@@ -316,7 +309,7 @@ namespace ThermodynamicApi
             chunk?.SetModdata("thermoinfo", msg.Data);
         }
 
-        void SaveThermodynamicData(Dictionary<int, Dictionary<string, MatterProperties>> thermoData, BlockPos pos)
+        void SaveThermodynamicData(Dictionary<int, Dictionary<string, MaterialProperties>> thermoData, BlockPos pos)
         {
             int chunksize = api.World.BlockAccessor.ChunkSize;
             int chunkX = pos.X / chunksize;
@@ -332,7 +325,7 @@ namespace ThermodynamicApi
             serverChannel?.BroadcastPacket(new ChunkThermoData() { chunkX = chunkX, chunkY = chunkY, chunkZ = chunkZ, Data = data });
         }
 
-        Dictionary<int, Dictionary<string, MatterProperties>> GetOrCreateMatterAt(BlockPos pos)
+        Dictionary<int, Dictionary<string, MaterialProperties>> GetOrCreateMatterAt(BlockPos pos)
         {
             byte[] data;
 
@@ -341,47 +334,47 @@ namespace ThermodynamicApi
 
             data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk;
+            Dictionary<int, Dictionary<string, MaterialProperties>> matterOfChunk;
             if (data != null)
             {
                 try
                 {
-                    matterOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MatterProperties>>>(data);
+                    matterOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialProperties>>>(data);
                 }
                 catch (Exception)
                 {
-                    matterOfChunk = new Dictionary<int, Dictionary<string, MatterProperties>>();
+                    matterOfChunk = new Dictionary<int, Dictionary<string, MaterialProperties>>();
                 }
             }
             else
             {
-                matterOfChunk = new Dictionary<int, Dictionary<string, MatterProperties>>();
+                matterOfChunk = new Dictionary<int, Dictionary<string, MaterialProperties>>();
             }
 
             return matterOfChunk;
         }
 
-        static Dictionary<int, Dictionary<string, MatterProperties>> GetOrCreateMatterAt(IWorldChunk chunk)
+        static Dictionary<int, Dictionary<string, MaterialProperties>> GetOrCreateMatterAt(IWorldChunk chunk)
         {
             byte[] data;
 
             data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk;
+            Dictionary<int, Dictionary<string, MaterialProperties>> matterOfChunk;
             if (data != null)
             {
                 try
                 {
-                    matterOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MatterProperties>>>(data);
+                    matterOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialProperties>>>(data);
                 }
                 catch (Exception)
                 {
-                    matterOfChunk = new Dictionary<int, Dictionary<string, MatterProperties>>();
+                    matterOfChunk = new Dictionary<int, Dictionary<string, MaterialProperties>>();
                 }
             }
             else
             {
-                matterOfChunk = new Dictionary<int, Dictionary<string, MatterProperties>>();
+                matterOfChunk = new Dictionary<int, Dictionary<string, MaterialProperties>>();
             }
 
             return matterOfChunk;
@@ -389,7 +382,7 @@ namespace ThermodynamicApi
 
         private void AddMatterBehavior()
         {
-            if (!ThermodynamicConfig.Loaded.GasesEnabled) return;
+            if (!ThermalDynamicsConfig.Loaded.GasesEnabled) return;
             foreach (Block block in api.World.Blocks)
             {
                 if (block.BlockId != 0)
@@ -401,9 +394,9 @@ namespace ThermodynamicApi
 
         }
 
-        public Dictionary<string, MatterProperties> GetMatter(BlockPos pos)
+        public Dictionary<string, MaterialProperties> GetMatter(BlockPos pos)
         {
-            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
+            Dictionary<int, Dictionary<string, MaterialProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return null;
 
             int index3d = ToLocalIndex(pos);
@@ -412,24 +405,24 @@ namespace ThermodynamicApi
             return matterOfChunk[index3d];
         }
 
-        public MatterProperties GetMatter(BlockPos pos, string name)
+        public MaterialProperties GetMatter(BlockPos pos, string name)
         {
-            Dictionary<string, MatterProperties> matterHere = GetMatter(pos);
+            Dictionary<string, MaterialProperties> matterHere = GetMatter(pos);
 
             if (matterHere == null || !matterHere.ContainsKey(name)) return default;
 
             return matterHere[name];
         }
 
-        public Dictionary<string, MatterProperties> RemoveMatter(BlockPos pos)
+        public Dictionary<string, MaterialProperties> RemoveMatter(BlockPos pos)
         {
-            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
+            Dictionary<int, Dictionary<string, MaterialProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return null;
 
             int index3d = ToLocalIndex(pos);
             if (!matterOfChunk.ContainsKey(index3d) || matterOfChunk[index3d] == null) return null;
 
-            Dictionary<string, MatterProperties> result = new Dictionary<string, MatterProperties>(matterOfChunk[index3d]);
+            Dictionary<string, MaterialProperties> result = new Dictionary<string, MaterialProperties>(matterOfChunk[index3d]);
 
             if (matterOfChunk.Remove(index3d))
             {
@@ -439,9 +432,9 @@ namespace ThermodynamicApi
             return null;
         }
 
-        public void SetMatter(BlockPos pos, Dictionary<string, MatterProperties> matterputhere)
+        public void SetMatter(BlockPos pos, Dictionary<string, MaterialProperties> matterputhere)
         {
-            Dictionary<int, Dictionary<string, MatterProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
+            Dictionary<int, Dictionary<string, MaterialProperties>> matterOfChunk = GetOrCreateMatterAt(pos);
             if (matterOfChunk == null) return;
 
             int index3d = ToLocalIndex(pos);
@@ -459,7 +452,7 @@ namespace ThermodynamicApi
 
         public float GetTotalGasMass(BlockPos pos)
         {
-            Dictionary<string, MatterProperties> matterHere = GetMatter(pos);
+            Dictionary<string, MaterialProperties> matterHere = GetMatter(pos);
             if (matterHere == null) return default;
             float mass = 0;
 
@@ -600,12 +593,12 @@ namespace ThermodynamicApi
             if (PollutionPerChunk[columm][matter] < 0) PollutionPerChunk[columm][matter] = 0;
         }*/
 
-        public void QueueMatterChange(Dictionary<string, MatterProperties> change, BlockPos pos)
+        public void QueueMatterChange(Dictionary<string, MaterialProperties> change, BlockPos pos)
         {
-            if (change == null) change = new Dictionary<string, MatterProperties>();
+            if (change == null) change = new Dictionary<string, MaterialProperties>();
 
             BlockPos temp = pos.Copy();
-            MatterProperties tmp; 
+            MaterialProperties tmp; 
             lock (matterDynamicsLock)
             {
                 if (!matterDynamicsQueue.ContainsKey(temp)) matterDynamicsQueue.Add(temp, change);
@@ -706,19 +699,19 @@ namespace ThermodynamicApi
             readonly int thermoTick = 50;
             IBlockAccessor blockAccessor;
             readonly ICoreServerAPI sapi;
-            Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkMatter;
-            readonly ThermodynamicSystem thermoSys;
+            Dictionary<BlockPos, Dictionary<string, MaterialProperties>> checkMatter;
+            readonly ThermalDynamicsSystem thermoSys;
 
             public bool Stopping { get; set; }
             public bool Paused { get; set; }
 
-            public ThermodynamicThread(ICoreServerAPI sapi, ThermodynamicSystem gassys)
+            public ThermodynamicThread(ICoreServerAPI sapi, ThermalDynamicsSystem gassys)
             {
                 this.sapi = sapi;
                 thermoSys = gassys;
             }
 
-            public void Start(Dictionary<BlockPos, Dictionary<string, MatterProperties>> checkMatter)
+            public void Start(Dictionary<BlockPos, Dictionary<string, MaterialProperties>> checkMatter)
             {
                 this.checkMatter = checkMatter;
 
@@ -726,7 +719,7 @@ namespace ThermodynamicApi
                 {
                     while (!sapi.Server.IsShuttingDown && !Stopping)
                     {
-                        if (!Paused && ThermodynamicConfig.Loaded.GasesEnabled)
+                        if (!Paused && ThermalDynamicsConfig.Loaded.GasesEnabled)
                         {
                             blockAccessor = sapi.World.BlockAccessor;
                             lock (matterDynamicsLock)
@@ -735,9 +728,9 @@ namespace ThermodynamicApi
                                 {
                                     if (block.Key == null || block.Value == null) continue;
                                     BlockPos current = block.Key;
-                                    Dictionary<string, MatterProperties> matter = block.Value;
+                                    Dictionary<string, MaterialProperties> matter = block.Value;
                                     checkMatter.Remove(current);
-                                    AddAndDistributeMatter(matter, current);
+                                    AddDistibuteMatterMatter(matter, current);
                                 }
                             }
                             Thread.Sleep(thermoTick);
@@ -749,25 +742,18 @@ namespace ThermodynamicApi
                 thread.Name = "CheckGasSpread";
                 thread.Start();
             }
-
-            public void AddAndDistributeMatter(Dictionary<string, MatterProperties> adds, BlockPos pos)
+            public void AddDistibuteMatterMatter(Dictionary<string, MaterialProperties> adds, BlockPos pos)
             {
                 if (pos.Y < 1 || pos.Y > blockAccessor.MapSizeY) return;
 
-                Dictionary<string, MatterProperties> collectedMatter = adds ?? new Dictionary<string, MatterProperties>();
+                Dictionary<string, MaterialProperties> collectedMatter = adds ?? new Dictionary<string, MaterialProperties>();
                 Queue<Vec3i> checkQueue = new Queue<Vec3i>();
                 List<MaterialsChunk> chunks = new List<MaterialsChunk>();
-                HashSet<BlockPos>[] layers = new HashSet<BlockPos>[bounds.MaxY - bounds.MinY];
                 Dictionary<int, Block> blocks = new Dictionary<int, Block>();
                 float windspeed = -1;
                 int chunksize = blockAccessor.ChunkSize;
                 int totalBlockCount = 1;
                 bool openAir = false;
-
-                for (int i = 0; i < layers.Length; i++)
-                {
-                    layers[i] = new HashSet<BlockPos>();
-                }
 
                 for (int x = bounds.MinX / blockAccessor.ChunkSize; x <= bounds.MaxX / blockAccessor.ChunkSize; x++)
                 {

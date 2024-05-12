@@ -18,7 +18,7 @@ using Vintagestory.ServerMods;
 using Vintagestory.Server;
 using Vintagestory.ServerMods.NoObf;
 
-namespace ThermodynamicApi
+namespace ThermalDynamics
 {
     [HarmonyPatch(typeof(EntitySidedProperties))]
     public class BreatheOverride
@@ -42,9 +42,9 @@ namespace ThermodynamicApi
         [HarmonyPostfix]
         static void ChangeToAir(Entity entity, EntityProperties properties, EntitySidedProperties __instance, JsonObject[] ___BehaviorsAsJsonObj)
         {
-            if (ThermodynamicConfig.Loaded.BreathingEnabled)
+            if (ThermalDynamicsConfig.Loaded.BreathingEnabled)
             {
-                if (!(entity is EntityPlayer) || ThermodynamicConfig.Loaded.PlayerBreathingEnabled)
+                if (!(entity is EntityPlayer) || ThermalDynamicsConfig.Loaded.PlayerBreathingEnabled)
                 {
                     for (int i = 0; i < __instance.Behaviors.Count; i++)
                     {
@@ -60,7 +60,7 @@ namespace ThermodynamicApi
                 }
             }
 
-            if (ThermodynamicConfig.Loaded.GasesEnabled && entity.Api.Side == EnumAppSide.Server)
+            if (ThermalDynamicsConfig.Loaded.GasesEnabled && entity.Api.Side == EnumAppSide.Server)
             {
                 EntityBehavior gas = new EntityBehaviorGas(entity);
                 gas.Initialize(properties, null);
@@ -93,7 +93,7 @@ namespace ThermodynamicApi
         static void GasSetup(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, ServerMain __instance)
         {
             //Register this explosion
-            ThermodynamicSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            ThermalDynamicsSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
 
             if (gasHandler == null) return;
 
@@ -104,7 +104,7 @@ namespace ThermodynamicApi
         [HarmonyPostfix]
         static void GasSpread(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, ServerMain __instance)
         {
-            ThermodynamicSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            ThermalDynamicsSystem gasHandler = __instance.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
 
             if (gasHandler == null) return;
 
@@ -127,14 +127,14 @@ namespace ThermodynamicApi
                 }
             }
 
-            return ThermodynamicConfig.Loaded.ContainerBonus;
+            return ThermalDynamicsConfig.Loaded.ContainerBonus;
         }
 
         [HarmonyPatch("GetPerishRate")]
         [HarmonyPostfix]
         static void AirQuality(BlockEntityContainer __instance, ref float __result)
         {
-            float airQuality = __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>().GetAirAmount(__instance.Pos);
+            float airQuality = __instance.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>().GetAirAmount(__instance.Pos);
 
             if (airQuality >= 0) return;
 
@@ -166,7 +166,7 @@ namespace ThermodynamicApi
         {
             if (__result && world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(null, blockSel.Position);
+                world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>()?.QueueMatterChange(null, blockSel.Position);
             }
         }
     }
@@ -195,7 +195,7 @@ namespace ThermodynamicApi
         {
             if (world.Side == EnumAppSide.Server)
             {
-                world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueMatterChange(null, position);
+                world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>()?.QueueMatterChange(null, position);
             }
         }
     }
@@ -240,7 +240,7 @@ namespace ThermodynamicApi
         static void Burn(Entity __instance, DamageSource damageSource)
         {
             if (damageSource?.Source != EnumDamageSource.Explosion) return;
-            if (ThermodynamicConfig.Loaded.FlammableGas && __instance.Api.ModLoader.GetModSystem<ThermodynamicSystem>().IsVolatile(__instance.ServerPos.AsBlockPos))
+            if (ThermalDynamicsConfig.Loaded.FlammableGas && __instance.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>().IsVolatile(__instance.ServerPos.AsBlockPos))
             {
                 __instance.Ignite();
             }

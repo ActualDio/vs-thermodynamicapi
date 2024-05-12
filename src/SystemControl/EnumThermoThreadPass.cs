@@ -1,5 +1,5 @@
 ﻿
-namespace ThermodynamicApi.SystemControl
+namespace ThermalDynamics.SystemControl
 {
     public enum EnumThermoProcessOrder
     {

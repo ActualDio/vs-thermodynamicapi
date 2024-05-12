@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace ThermodynamicApi.SystemControl
+namespace ThermalDynamics.SystemControl
 {
     [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
     public class ChunkThermoData

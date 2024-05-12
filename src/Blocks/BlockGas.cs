@@ -4,9 +4,9 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.GameContent;
 using System.Collections.Generic;
-using ThermodynamicApi.ThermoDynamics;
+using ThermalDynamics.Thermodynamics;
 
-namespace ThermodynamicApi.Blocks
+namespace ThermalDynamics.Blocks
 {
     public class BlockGas: Block
     {
@@ -16,10 +16,10 @@ namespace ThermodynamicApi.Blocks
 
             if (world.Side != EnumAppSide.Server) return;
             
-            Dictionary<string, MatterProperties> tester = new Dictionary<string, MatterProperties>();
+            Dictionary<string, MaterialProperties> tester = new Dictionary<string, MaterialProperties>();
             tester.Add(FirstCodePart(1), 1);
 
-            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>().QueueMatterChange(tester, blockPos);
+            world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>().QueueMatterChange(tester, blockPos);
             world.BlockAccessor.SetBlock(0, blockPos);
         }
 
@@ -28,7 +28,7 @@ namespace ThermodynamicApi.Blocks
             Dictionary<string, float> tester = new Dictionary<string, float>();
             tester.Add(FirstCodePart(1), 1);
 
-            api.ModLoader.GetModSystem<ThermodynamicSystem>().SetGases(pos, tester);
+            api.ModLoader.GetModSystem<ThermalDynamicsSystem>().SetGases(pos, tester);
             blockAccessor.SetBlock(0, pos);
 
             return true;

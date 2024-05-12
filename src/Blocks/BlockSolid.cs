@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
 
-namespace ThermodynamicApi.Blocks
+namespace ThermalDynamics.Blocks
 {
     internal class BlockSolid : Block
     {

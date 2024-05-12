@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace ThermodynamicApi
+namespace ThermalDynamics
 {
-    public class ThermodynamicConfig
+    public class ThermalDynamicsConfig
     {
-        public static ThermodynamicConfig Loaded { get; set; } = new ThermodynamicConfig();
+        public static ThermalDynamicsConfig Loaded { get; set; } = new ThermalDynamicsConfig();
 
         //Gas settings
 

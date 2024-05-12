@@ -7,9 +7,9 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.API.Server;
 using Vintagestory.API.Config;
-using ThermodynamicApi.ThermoDynamics;
+using ThermalDynamics.Thermodynamics;
 
-namespace ThermodynamicApi.ApiHelper
+namespace ThermalDynamics.ApiHelper
 {
     public class ThermodynamicHelper : ModSystem
     {
@@ -39,7 +39,7 @@ namespace ThermodynamicApi.ApiHelper
         static Dictionary<string, FluidInfoLite> LiteFluidDict;
 
         //Returns the thermodynamic info for the entire chunk; Does not create fluids or chunk data
-        public Dictionary<int, Dictionary<string, MatterProperties>> GetThermodynamicInfoForChunk(BlockPos pos)
+        public Dictionary<int, Dictionary<string, MaterialProperties>> GetThermodynamicInfoForChunk(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             byte[] data;
@@ -49,13 +49,13 @@ namespace ThermodynamicApi.ApiHelper
 
             data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, MatterProperties>> thermoInfoOfChunk = null;
+            Dictionary<int, Dictionary<string, MaterialProperties>> thermoInfoOfChunk = null;
 
             if (data != null)
             {
                 try
                 {
-                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MatterProperties>>>(data);
+                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialProperties>>>(data);
                 }
                 catch (Exception)
                 {
@@ -67,7 +67,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Returns the thermodynamic info for the entire chunk; Does not create fluids or chunk data
-        public Dictionary<int, Dictionary<string, MatterProperties>> GetThermodynamicInfoForChunk(IWorldChunk chunk)
+        public Dictionary<int, Dictionary<string, MaterialProperties>> GetThermodynamicInfoForChunk(IWorldChunk chunk)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             byte[] data;
@@ -76,13 +76,13 @@ namespace ThermodynamicApi.ApiHelper
 
             data = chunk.GetModdata("thermoinfo");
 
-            Dictionary<int, Dictionary<string, MatterProperties>> thermoInfoOfChunk = null;
+            Dictionary<int, Dictionary<string, MaterialProperties>> thermoInfoOfChunk = null;
 
             if (data != null)
             {
                 try
                 {
-                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MatterProperties>>>(data);
+                    thermoInfoOfChunk = SerializerUtil.Deserialize<Dictionary<int, Dictionary<string, MaterialProperties>>>(data);
                 }
                 catch (Exception)
                 {
@@ -94,10 +94,10 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Returns thermodynamic info for a particular block position
-        public Dictionary<string, MatterProperties> GetThermodynamicInfo(BlockPos pos)
+        public Dictionary<string, MaterialProperties> GetThermodynamicInfo(BlockPos pos)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
-            Dictionary<int, Dictionary<string, MatterProperties>> thermoInfoOfChunk = GetThermodynamicInfoForChunk(pos);
+            Dictionary<int, Dictionary<string, MaterialProperties>> thermoInfoOfChunk = GetThermodynamicInfoForChunk(pos);
             if (thermoInfoOfChunk == null) return null;
 
             int index3d = toLocalIndex(pos);
@@ -107,10 +107,10 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Returns the thermodynamic info of the specified fluid at a position if it is present
-        public MatterProperties? GetFluidThermodynamicInfo(BlockPos pos, string name)
+        public MaterialProperties? GetFluidThermodynamicInfo(BlockPos pos, string name)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
-            Dictionary<string, MatterProperties> fluidsHere = GetThermodynamicInfo(pos);
+            Dictionary<string, MaterialProperties> fluidsHere = GetThermodynamicInfo(pos);
 
             if (fluidsHere == null || !fluidsHere.ContainsKey(name)) return null;
 
@@ -118,14 +118,14 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Serializes and sends a fluid spread event on the bus
-        public void SendFluidSpread(BlockPos pos, Dictionary<string, MatterProperties> fluids = null)
+        public void SendFluidSpread(BlockPos pos, Dictionary<string, MaterialProperties> fluids = null)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return;
             (api as ICoreServerAPI)?.Event.PushEvent("spreadFluid", SerializeFluidTreeData(pos, fluids));
         }
 
         //Serializes a fluid spreading event
-        public TreeAttribute SerializeFluidTreeData(BlockPos pos, Dictionary<string, MatterProperties> fluids)
+        public TreeAttribute SerializeFluidTreeData(BlockPos pos, Dictionary<string, MaterialProperties> fluids)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi")) return null;
             if (pos == null) return null;
@@ -150,22 +150,22 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Deserializes a fluid spreading event
-        public static Dictionary<string, MatterProperties> DeserializeThermoTreeData(IAttribute data, out BlockPos pos)
+        public static Dictionary<string, MaterialProperties> DeserializeThermoTreeData(IAttribute data, out BlockPos pos)
         {
             TreeAttribute tree = data as TreeAttribute;
             pos = tree?.GetBlockPos("pos");
             ITreeAttribute thermoInfo = tree?.GetTreeAttribute("thermoinfo");
 
             if (pos == null) return null;
-            Dictionary<string, MatterProperties> dFluids = null;
+            Dictionary<string, MaterialProperties> dFluids = null;
 
             if (thermoInfo != null)
             {
-                dFluids = new Dictionary<string, MatterProperties>();
+                dFluids = new Dictionary<string, MaterialProperties>();
 
                 foreach (var fluid in thermoInfo)
                 {
-                    MatterProperties? value = SerializerUtil.Deserialize<MatterProperties>(thermoInfo.GetBytes(fluid.Key));
+                    MaterialProperties? value = SerializerUtil.Deserialize<MaterialProperties>(thermoInfo.GetBytes(fluid.Key));
                     if (value.GetValueOrDefault() == default) continue;
 
                     dFluids.Add(fluid.Key, value.Value);
@@ -176,7 +176,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Cleanly merges a fluid into an already existing fluid dictionary
-        public static void MergeFluidIntoDict(string fluidName, MatterProperties? fluidInfo, ref Dictionary<string, MatterProperties> dest)
+        public static void MergeFluidIntoDict(string fluidName, MaterialProperties? fluidInfo, ref Dictionary<string, MaterialProperties> dest)
         {
             if (fluidName == null || fluidInfo.GetValueOrDefault() == default || dest == null) return;
 
@@ -191,7 +191,7 @@ namespace ThermodynamicApi.ApiHelper
         }
 
         //Cleanly merges two fluid dictionaries together
-        public static void MergeFluidDicts(Dictionary<string, MatterProperties> source, ref Dictionary<string, MatterProperties> dest)
+        public static void MergeFluidDicts(Dictionary<string, MaterialProperties> source, ref Dictionary<string, MaterialProperties> dest)
         {
             if (source == null || dest == null) return;
 
@@ -296,17 +296,17 @@ namespace ThermodynamicApi.ApiHelper
 
         //Collects gases and voids them in the world and returns them as a table
         //Note: Because this happens on the main thread and fluid spreading happens on an off thread, it may be somewhat inaccurate
-        public Dictionary<string, MatterProperties> CollectFluids(BlockPos pos, int radius, string[] fluidFilter)
+        public Dictionary<string, MaterialProperties> CollectFluids(BlockPos pos, int radius, string[] fluidFilter)
         {
             if (!api.ModLoader.IsModEnabled("thermoapi") || api.Side != EnumAppSide.Server) return null;
             
             IBlockAccessor blockAccessor = api.World.BlockAccessor;
             if (pos.Y < 1 || pos.Y > blockAccessor.MapSizeY) return null;
 
-            Dictionary<string, MatterProperties> result = new Dictionary<string, MatterProperties>();
+            Dictionary<string, MaterialProperties> result = new Dictionary<string, MaterialProperties>();
             Queue<Vec3i> checkQueue = new Queue<Vec3i>();
             Dictionary<Vec3i, IWorldChunk> chunks = new Dictionary<Vec3i, IWorldChunk>();
-            Dictionary<Vec3i, Dictionary<int, Dictionary<string, MatterProperties>>> fluidChunks = new Dictionary<Vec3i, Dictionary<int, Dictionary<string, MatterProperties>>>();
+            Dictionary<Vec3i, Dictionary<int, Dictionary<string, MaterialProperties>>> fluidChunks = new Dictionary<Vec3i, Dictionary<int, Dictionary<string, MaterialProperties>>>();
             HashSet<BlockPos> markedPositions = new HashSet<BlockPos>();
             Dictionary<int, Block> blocks = new Dictionary<int, Block>();
             Cuboidi bounds = new Cuboidi(pos.X - radius, pos.Y - radius, pos.Z - radius, pos.X + radius, pos.Y + radius, pos.Z + radius);
@@ -338,7 +338,7 @@ namespace ThermodynamicApi.ApiHelper
             blocks.Add(starter.BlockId, starter);
             if (fluidChunks[originChunkVec] != null && fluidChunks[originChunkVec].ContainsKey(toLocalIndex(pos)))
             {
-                Dictionary<string, MatterProperties> fluidsHere = fluidChunks[originChunkVec][toLocalIndex(pos)];
+                Dictionary<string, MaterialProperties> fluidsHere = fluidChunks[originChunkVec][toLocalIndex(pos)];
                 if (fluidFilter == null) MergeFluidDicts(fluidsHere, ref result);
                 else
                 {

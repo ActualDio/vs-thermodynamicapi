@@ -5,14 +5,14 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 using Vintagestory.API.Server;
-using ThermodynamicApi.ThermoDynamics;
+using ThermalDynamics.Thermodynamics;
 
-namespace ThermodynamicApi.BlockEntityBehaviour
+namespace ThermalDynamics.BlockEntityBehaviour
 {
     public class BlockEntityBehaviorProduceFluid : BlockEntityBehavior
     {
-        ThermodynamicSystem thermoHandler;
-        public Dictionary<string, MatterProperties> produceFluid;
+        ThermalDynamicsSystem thermoHandler;
+        public Dictionary<string, MaterialProperties> produceFluid;
         int updateTimeInMS;
         double updateTimeInHours;
         double lastTimeProduced;
@@ -25,8 +25,8 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
-            produceFluid = properties["produceGas"].AsObject(new Dictionary<string, MatterProperties>());
+            thermoHandler = api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
+            produceFluid = properties["produceGas"].AsObject(new Dictionary<string, MaterialProperties>());
             updateTimeInMS = properties["updateMS"].AsInt(10000);
             updateTimeInHours = properties["updateHours"].AsDouble();
             Blockentity.RegisterGameTickListener(ProduceGas, updateTimeInMS);
@@ -39,7 +39,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
 
             lastTimeProduced = Blockentity.Api.World.Calendar.TotalHours;
 
-            thermoHandler.QueueMatterChange(new Dictionary<string, MatterProperties>(produceFluid), blockPos);
+            thermoHandler.QueueMatterChange(new Dictionary<string, MaterialProperties>(produceFluid), blockPos);
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)

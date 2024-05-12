@@ -7,12 +7,12 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
-namespace ThermodynamicApi.EntityBehavior
+namespace ThermalDynamics.EntityBehavior
 {
     public class EntityBehaviorGas : Vintagestory.API.Common.Entities.EntityBehavior
     {
         float timeKeeper;
-        ThermodynamicSystem gasHandler;
+        ThermalDynamicsSystem gasHandler;
 
         ItemStack LeftHand
         {
@@ -33,7 +33,7 @@ namespace ThermodynamicApi.EntityBehavior
         {
             base.Initialize(properties, attributes);
 
-            gasHandler = entity.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            gasHandler = entity.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
         }
 
         public override void OnGameTick(float deltaTime)
@@ -48,7 +48,7 @@ namespace ThermodynamicApi.EntityBehavior
 
             BlockPos entityPos = entity.SidedPos.AsBlockPos;
 
-            if (ThermodynamicConfig.Loaded.Explosions && (entity.IsOnFire || HasFire()))
+            if (ThermalDynamicsConfig.Loaded.Explosions && (entity.IsOnFire || HasFire()))
             {
                 if (gasHandler.ShouldExplode(entityPos))
                 {
@@ -57,7 +57,7 @@ namespace ThermodynamicApi.EntityBehavior
                 else if (gasHandler.IsVolatile(entityPos)) entity.Ignite();
             }
 
-            if (ThermodynamicConfig.Loaded.Acid && entity.FeetInLiquid)
+            if (ThermalDynamicsConfig.Loaded.Acid && entity.FeetInLiquid)
             {
                 float acidAmount = gasHandler.GetAcidity(entity.ServerPos.AsBlockPos);
                 EntityPlayer player;
@@ -78,9 +78,9 @@ namespace ThermodynamicApi.EntityBehavior
 
         public override void OnEntityDeath(DamageSource damageSourceForDeath)
         {
-            if (ThermodynamicConfig.Loaded.Smoke && damageSourceForDeath?.Type == EnumDamageType.Fire)
+            if (ThermalDynamicsConfig.Loaded.Smoke && damageSourceForDeath?.Type == EnumDamageType.Fire)
             {
-                ThermodynamicSystem gasHandler = entity.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+                ThermalDynamicsSystem gasHandler = entity.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
 
                 Dictionary<string, float> gases = new Dictionary<string, float>();
                 gases.Add("co2", 0.05f * gasHandler.GasSpreadBlockRadius);

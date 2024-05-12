@@ -5,15 +5,15 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 using Vintagestory.API.Server;
-using ThermodynamicApi.ThermoDynamics;
+using ThermalDynamics.Thermodynamics;
 
-namespace ThermodynamicApi.BlockEntityBehaviour
+namespace ThermalDynamics.BlockEntityBehaviour
 {
     public class BlockEntityBehaviorConsumeFluid : BlockEntityBehavior
     {
-        ThermodynamicSystem thermoHandler;
-        public Dictionary<string, MatterProperties> liquidScrub;
-        public MatterProperties scrubAmount;
+        ThermalDynamicsSystem thermoHandler;
+        public Dictionary<string, MaterialProperties> liquidScrub;
+        public MaterialProperties scrubAmount;
         BlockPos blockPos
         {
             get { return Blockentity.Pos; }
@@ -22,10 +22,10 @@ namespace ThermodynamicApi.BlockEntityBehaviour
         public override void Initialize(ICoreAPI api, JsonObject properties)
         {
             base.Initialize(api, properties);
-            thermoHandler = api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            thermoHandler = api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
             Blockentity.RegisterGameTickListener(RemoveFluid, 5000);
-            scrubAmount = properties["scrubAmount"].AsObject<MatterProperties>();
-            liquidScrub = new Dictionary<string, MatterProperties>();
+            scrubAmount = properties["scrubAmount"].AsObject<MaterialProperties>();
+            liquidScrub = new Dictionary<string, MaterialProperties>();
             liquidScrub.Add("THISISAPLANT", scrubAmount);
         }
 
@@ -38,7 +38,7 @@ namespace ThermodynamicApi.BlockEntityBehaviour
 
             if (bpc.Inventory[0].Empty || bpc.Inventory[0].Itemstack.Block?.BlockMaterial != EnumBlockMaterial.Plant || bpc.Inventory[0].Itemstack.Collectible.Code.Path.StartsWith("mushroom")) return;
 
-            thermoHandler.QueueMatterChange(new Dictionary<string, MatterProperties>(liquidScrub), blockPos);
+            thermoHandler.QueueMatterChange(new Dictionary<string, MaterialProperties>(liquidScrub), blockPos);
         }
 
         public BlockEntityBehaviorConsumeFluid(BlockEntity blockentity) : base(blockentity)

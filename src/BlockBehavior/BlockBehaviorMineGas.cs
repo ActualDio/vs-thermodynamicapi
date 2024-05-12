@@ -4,7 +4,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Datastructures;
 using System.Collections.Generic;
 
-namespace ThermodynamicApi.BlockBehavior
+namespace ThermalDynamics.BlockBehavior
 {
     public class BlockBehaviorMineGas : BlockBehaviorMatter
     {
@@ -22,18 +22,18 @@ namespace ThermodynamicApi.BlockBehavior
         {
             base.OnBlockBroken(world, pos, byPlayer, ref handling);
 
-            if (onRemove || !ThermodynamicConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
+            if (onRemove || !ThermalDynamicsConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
 
-            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), pos);
+            world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), pos);
         }
 
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos, ref EnumHandling handling)
         {
             base.OnBlockRemoved(world, pos, ref handling);
 
-            if (!onRemove || !ThermodynamicConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
+            if (!onRemove || !ThermalDynamicsConfig.Loaded.GasesEnabled || world.Side != EnumAppSide.Server || produceGas == null || produceGas.Count < 1) return;
 
-            world.Api.ModLoader.GetModSystem<ThermodynamicSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), pos);
+            world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>()?.QueueGasExchange(new Dictionary<string, float>(produceGas), pos);
         }
 
         public BlockBehaviorMineGas(Block block) : base(block)

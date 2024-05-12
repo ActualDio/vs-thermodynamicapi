@@ -2,7 +2,7 @@
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace ThermodynamicApi.BlockBehavior
+namespace ThermalDynamics.BlockBehavior
 {
     public class BlockBehaviorSparkGas : BlockBehaviorMatter
     {
@@ -10,9 +10,9 @@ namespace ThermodynamicApi.BlockBehavior
         {
             base.OnBlockBroken(world, pos, byPlayer, ref handling);
             
-            if (world.Side != EnumAppSide.Server || byPlayer == null || !ThermodynamicConfig.Loaded.GasesEnabled || !ThermodynamicConfig.Loaded.Explosions || world.Rand.NextDouble() > ThermodynamicConfig.Loaded.PickaxeExplosionChance) return;
+            if (world.Side != EnumAppSide.Server || byPlayer == null || !ThermalDynamicsConfig.Loaded.GasesEnabled || !ThermalDynamicsConfig.Loaded.Explosions || world.Rand.NextDouble() > ThermalDynamicsConfig.Loaded.PickaxeExplosionChance) return;
 
-            ThermodynamicSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermodynamicSystem>();
+            ThermalDynamicsSystem gasHandler = world.Api.ModLoader.GetModSystem<ThermalDynamicsSystem>();
 
             if (gasHandler.ShouldExplode(pos))
             {

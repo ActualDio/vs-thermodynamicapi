@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThermodynamicApi.BlockBehavior
+namespace ThermalDynamics.BlockBehavior
 {
     public class BlockBehaviorConsumeGas
     {
