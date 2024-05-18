@@ -1,0 +1,52 @@
+﻿using System;
+
+namespace ThermalDynamics
+{
+    public class ThermalDynamicsConfig
+    {
+        public static ThermalDynamicsConfig Loaded { get; set; } = new ThermalDynamicsConfig();
+
+        //Gas settings
+
+        public bool Explosions { get; set; } = true;
+
+        public bool FlammableGas { get; set; } = true;
+
+        public double PickaxeExplosionChance { get; set; } = 0.25;
+
+        public bool ContainerBonus { get; set; } = true;
+
+        public bool Smoke { get; set; } = true;
+
+        public bool Acid { get; set; } = true;      
+
+        public bool Exhaling { get; set; } = true;
+
+        public int DefaultSpreadRadius { get; set; } = 7;
+
+        public float SpreadGasOnBreakChance { get; set; } = 1;
+
+        public float SpreadGasOnPlaceChance { get; set; } = 0;
+
+        public float UpdateSpreadGasChance { get; set; } = 0.01f;
+
+        //Breathing Settings
+
+        public bool AllowScuba { get; set; } = true;
+
+        public bool AllowMasks { get; set; } = true;
+
+        public bool ToxicEffects { get; set; } = true;
+
+        #region Control Content
+
+        public bool GasesEnabled { get; set; } = true;
+
+        public bool GasesDebugEnabled { get; set; } = false;
+
+        public bool BreathingEnabled { get; set; } = true;
+
+        public bool PlayerBreathingEnabled { get; set; } = true;
+        #endregion
+    }
+}
