@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2B6CC72F-B91C-4596-A6AF-6D247CCE2810}</ProjectGuid>
+    <ProjectGuid>{2B977B1F-17BB-4714-B1DD-EA7E3A2C3745}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>gasapi</RootNamespace>
