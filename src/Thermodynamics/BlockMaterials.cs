@@ -10,7 +10,7 @@ namespace ThermalDynamics.Thermodynamics
 {
     public interface IBlockMaterials
     {
-        OrderedDictionary<string, MaterialProperties> Materials { get; }
+        static OrderedDictionary<string, MaterialProperties> Materials { get; }
         public void AddMaterial(MaterialProperties material);
         public void RemoveMaterial();
         static public bool IsEmpty(OrderedDictionary<string, MaterialProperties> list)
