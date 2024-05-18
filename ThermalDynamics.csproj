@@ -123,11 +123,13 @@
     <Compile Include="src\EntityBehavior\EntityBehaviorGas.cs" />
     <Compile Include="src\SystemControl\MaterialsChunk.cs" />
     <Compile Include="src\For Other Mods\ThermodynamicHelper.cs" />
-    <Compile Include="src\ThermoDynamics\MatterInfo.cs" />
+    <Compile Include="src\Thermodynamics\BlockMaterials.cs" />
+    <Compile Include="src\Thermodynamics\MaterialProperties.cs" />
+    <Compile Include="src\Thermodynamics\MatterInfo.cs" />
     <Compile Include="src\GUI\HudElementAirBar.cs" />
     <Compile Include="src\SystemControl\Patches.cs" />
-    <Compile Include="src\ThermoDynamics\MeasurementUnits.cs" />
-    <Compile Include="src\ThermoDynamics\ThermodynamicsMath.cs" />
+    <Compile Include="src\Thermodynamics\MeasurementUnits.cs" />
+    <Compile Include="src\Thermodynamics\ThermodynamicsMath.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="assets\" />
