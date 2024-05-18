@@ -54,7 +54,10 @@ namespace ThermalDynamics.Thermodynamics
                 }
             }
         }
+        public float GetThermalConductivity()
+        {
 
+        }
         public void RemoveMaterial()
         {
             throw new NotImplementedException();
