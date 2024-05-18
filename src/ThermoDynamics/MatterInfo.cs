@@ -17,6 +17,12 @@ namespace ThermalDynamics.Thermodynamics
         [JsonProperty]
         public float MolarMass = 1;
 
+        /// <summary>
+        /// The effective dimensions of a gas particle
+        /// </summary>
+        [JsonProperty]
+        public float KineticDiameter = 300; //In Picometers
+
         [JsonProperty]
         public float MeltingPoint = 0; // at 1 atmosphere of pressure
 
@@ -70,6 +76,8 @@ namespace ThermalDynamics.Thermodynamics
 
         };
 
+        public float MeanFreePathConst;
+
         //[JsonProperty]
         //public Dictionary<string, float> Effects;
 
@@ -86,6 +94,7 @@ namespace ThermalDynamics.Thermodynamics
         {
             SpecificGasConstant = ThermodynamicsMath.IdealGas_Const / MolarMass;
             PhaseGraph = SolvePhaseGraph();
+            MeanFreePathConst = SolveMeanFreePathConst(); // l = const * (T / p)
         }
         public Dictionary<string, float> SolvePhaseGraph()
         {
@@ -125,6 +134,11 @@ namespace ThermalDynamics.Thermodynamics
             graph["FusionOffset"] = melt_p["pressure"] - (melt_p["temperature"] * graph["FusionSlope"]);
 
             return graph;
+        }
+
+        public float SolveMeanFreePathConst()
+        {
+            return (ThermodynamicsMath.Boltzman_Const / (Math.Sqrt(2) * Math.PI * Math.Pow(KineticDiameter * Math.Pow(10, -12), 2));
         }
     }
 }

@@ -17,6 +17,7 @@ namespace ThermalDynamics.Thermodynamics
         {
             return list.Count == 0;
         }
+        public float GetThermalConductivity();
     }
     public class BlockGases : IBlockMaterials
     {
@@ -59,5 +60,4 @@ namespace ThermalDynamics.Thermodynamics
             throw new NotImplementedException();
         }
     }
-    
 }
